@@ -35,7 +35,7 @@
           class="navbar-brand-img h-100"
           alt="main_logo"
         />
-        <span class="ms-2 font-weight-bold me-2">Argon Dashboard 2</span>
+        <span class="ms-2 font-weight-bold me-2">QueueEase</span>
       </router-link>
     </div>
     <hr class="mt-0 horizontal dark" />
@@ -50,14 +50,14 @@ import logoWhite from "@/assets/img/logo-ct.png";
 export default {
   name: "index",
   components: {
-    SidenavList
+    SidenavList,
   },
   data() {
     return {
       logo,
-      logoWhite
+      logoWhite,
     };
   },
-  props: ["custom_class", "layout"]
+  props: ["custom_class", "layout"],
 };
 </script>

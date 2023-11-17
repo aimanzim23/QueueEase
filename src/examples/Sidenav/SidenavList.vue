@@ -17,6 +17,19 @@
       </li>
       <li class="nav-item">
         <sidenav-item
+          url="/monitorqueue"
+          :class="getRoute() === 'monitor queue' ? 'active' : ''"
+          :navText="'Monitor Queue'"
+        >
+          <template v-slot:icon>
+            <i
+              class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
+            ></i>
+          </template>
+        </sidenav-item>
+      </li>
+      <li class="nav-item">
+        <sidenav-item
           url="/tables"
           :class="getRoute() === 'tables' ? 'active' : ''"
           :navText="this.$store.state.isRTL ? 'الجداول' : 'Tables'"
@@ -129,24 +142,24 @@ import SidenavCard from "./SidenavCard.vue";
 export default {
   name: "SidenavList",
   props: {
-    cardBg: String
+    cardBg: String,
   },
   data() {
     return {
-      title: "Argon Dashboard 2",
+      title: "QueueEase",
       controls: "dashboardsExamples",
-      isActive: "active"
+      isActive: "active",
     };
   },
   components: {
     SidenavItem,
-    SidenavCard
+    SidenavCard,
   },
   methods: {
     getRoute() {
       const routeArr = this.$route.path.split("/");
       return routeArr[1];
-    }
-  }
+    },
+  },
 };
 </script>

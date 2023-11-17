@@ -9,7 +9,7 @@
         class="navbar-brand font-weight-bolder ms-lg-0 ms-3"
         :class="darkMode ? 'text-black' : 'text-white'"
         to="/"
-        >Argon Dashboard 2</router-link
+        >QueueEase</router-link
       >
       <button
         class="shadow-none navbar-toggler ms-2"
@@ -98,7 +98,7 @@ export default {
   data() {
     return {
       downArrWhite,
-      downArrBlack
+      downArrBlack,
     };
   },
   props: {
@@ -107,15 +107,15 @@ export default {
     isBtn: { type: String, default: "bg-gradient-light" },
     darkMode: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   computed: {
     darkModes() {
       return {
-        "text-dark": this.darkMode
+        "text-dark": this.darkMode,
       };
-    }
-  }
+    },
+  },
 };
 </script>

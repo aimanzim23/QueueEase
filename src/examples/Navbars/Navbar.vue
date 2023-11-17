@@ -35,6 +35,15 @@
         </div>
         <ul class="navbar-nav justify-content-end">
           <li class="nav-item d-flex align-items-center">
+            <span
+              @click="logout"
+              class="px-0 nav-link font-weight-bold text-white mr-3"
+            >
+              <i class="fa fa-sign-out"></i>
+              <span class="d-sm-inline d-none">Logout</span>
+            </span>
+          </li>
+          <li class="nav-item d-flex align-items-center">
             <router-link
               :to="{ name: 'Signin' }"
               class="px-0 nav-link font-weight-bold text-white"
@@ -50,6 +59,7 @@
               <span v-else class="d-sm-inline d-none">Sign In</span>
             </router-link>
           </li>
+
           <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
             <a
               href="#"
@@ -205,7 +215,7 @@ export default {
   name: "navbar",
   data() {
     return {
-      showMenu: false
+      showMenu: false,
     };
   },
   props: ["minNav", "textWhite"],
@@ -219,15 +229,15 @@ export default {
     toggleSidebar() {
       this.toggleSidebarColor("bg-white");
       this.navbarMinimize();
-    }
+    },
   },
   components: {
-    Breadcrumbs
+    Breadcrumbs,
   },
   computed: {
     currentRouteName() {
       return this.$route.name;
-    }
-  }
+    },
+  },
 };
 </script>
