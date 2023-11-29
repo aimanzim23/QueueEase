@@ -1,4 +1,49 @@
 <template>
+  <div class="col-lg-12">
+    <div class="row">
+      <div class="col-lg-3 col-md-6 col-12">
+        <div class="col">
+          <div class="card" style="width: 15rem; margin-bottom: 2rem">
+            <div class="card-body" style="font-size: 0.8rem">
+              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
+              <p class="card-text">1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-12">
+        <div class="col">
+          <div class="card" style="width: 15rem; margin-bottom: 2rem">
+            <div class="card-body" style="font-size: 0.8rem">
+              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
+              <p class="card-text">1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-12">
+        <div class="col">
+          <div class="card" style="width: 15rem; margin-bottom: 2rem">
+            <div class="card-body" style="font-size: 0.8rem">
+              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
+              <p class="card-text">1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-12">
+        <div class="col">
+          <div class="card" style="width: 15rem; margin-bottom: 2rem">
+            <div class="card-body" style="font-size: 0.8rem">
+              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
+              <p class="card-text">1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header pb-0">
       <h6>Queue List</h6>
@@ -22,6 +67,11 @@
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
                 Status
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Waiting Time
               </th>
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
@@ -71,16 +121,20 @@
           </tr>
           <tbody>
             <tr v-for="(queue, index) in queues" :key="index">
-              <td>{{ queue.userName }}</td>
-              <td>{{ queue.phoneNumber }}</td>
-              <td>{{ queue.notes }}</td>
+              <td class="mb-0 text-sm">{{ queue.userName }}</td>
+              <td class="text-xs font-weight-bold mb-0">
+                {{ queue.phoneNumber }}
+              </td>
+              <td class="mb-0 text-sm">{{ queue.notes }}</td>
+              <td class="mb-0 text-sm">4 min</td>
+              <td class="mb-0 text-sm">{{ formattedDate(queue.date) }}</td>
               <td>
                 <button @click="deleteQueue(queue.id)">Delete</button>
               </td>
             </tr>
           </tbody>
         </table>
-        <div>
+        <!-- <div>
           <input
             v-model="newQueue.userName"
             type="text"
@@ -93,6 +147,74 @@
           />
           <input v-model="newQueue.notes" type="text" placeholder="Notes" />
           <button @click="addNewQueue">Add</button>
+        </div> -->
+        <!-- Button trigger modal -->
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#exampleModal"
+        >
+          Add Queue
+        </button>
+
+        <!-- Bootstrap Modal Structure -->
+        <div
+          class="modal fade"
+          id="exampleModal"
+          tabindex="-1"
+          aria-labelledby="addForm"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="addForm">Add Users To Queue</h5>
+              </div>
+              <div class="modal-body">
+                <!-- Vue.js Form -->
+                <form>
+                  <div class="mb-3">
+                    <label for="userName" class="form-label">User Name</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="newQueue.userName"
+                      placeholder="Enter user name"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="phoneNumber" class="form-label"
+                      >Phone Number</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="newQueue.phoneNumber"
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea
+                      class="form-control"
+                      v-model="newQueue.notes"
+                      rows="3"
+                      placeholder="Enter notes"
+                    ></textarea>
+                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    @click="addNewQueue"
+                  >
+                    Add
+                  </button>
+                </form>
+                <!-- End of Vue.js Form -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -104,7 +226,6 @@ import {
   collection,
   addDoc,
   deleteDoc,
-  setDoc,
   onSnapshot,
   orderBy,
   doc,
@@ -117,6 +238,16 @@ import { onUnmounted, ref } from "vue";
 export default {
   name: "queue-list",
   components: {},
+  data() {
+    return {
+      queues: ref([]),
+      newQueue: {
+        userName: "",
+        phoneNumber: "",
+        notes: "",
+      },
+    };
+  },
   methods: {
     getCurrentUser() {
       const currentUser = auth.currentUser;
@@ -149,7 +280,6 @@ export default {
               phoneNumber: "",
               notes: "",
             };
-            console.log("Queue added to user's collection.");
           })
           .catch((error) => {
             console.error("Error adding queue to user's collection: ", error);
@@ -158,43 +288,91 @@ export default {
         console.error("User not authenticated.");
       }
     },
-    updateQueue: function (queue) {
-      setDoc(doc(db, "queues", queue.id), {
-        userName: queue.userName,
-        phoneNumber: queue.phoneNumber,
-        notes: queue.notes,
-        date: queue.date,
-      });
-    },
+    // updateQueue: function (queue) {
+    //   const user = auth.currentUser;
+    //   if (user) {
+    //     const userId = user.uid;
+    //     const userDocRef = doc(db, "users", userId);
+    //     const queueDocRef = doc(userDocRef, "queues", queue.id);
+
+    //     updateDoc(queueDocRef, {
+    //       userName: queue.userName,
+    //       phoneNumber: queue.phoneNumber,
+    //       notes: queue.notes,
+    //       date: queue.date,
+    //     })
+    //       .then(() => {
+    //         console.log("Queue updated successfully.");
+    //       })
+    //       .catch((error) => {
+    //         console.error("Error updating queue:", error);
+    //       });
+    //   } else {
+    //     console.error("User not authenticated.");
+    //   }
+    // },
+
     deleteQueue: function (id) {
-      deleteDoc(doc(db, "queues", id));
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+        const userDocRef = doc(db, "users", userId);
+        const queueDocRef = doc(userDocRef, "queues", id);
+
+        deleteDoc(queueDocRef)
+          .then(() => {
+            console.log("Queue deleted successfully.");
+          })
+          .catch((error) => {
+            console.error("Error deleting queue:", error);
+          });
+      } else {
+        console.error("User not authenticated.");
+      }
     },
   },
-  data() {
-    return {
-      queues: ref([]),
-      newQueue: {
-        userName: "",
-        phoneNumber: "",
-        notes: "",
-      },
-    };
-  },
+
   mounted() {
-    const latestQuery = query(collection(db, "queues"), orderBy("date"));
-    const livequeue = onSnapshot(latestQuery, (snapshot) => {
-      this.queues = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          userName: data.userName,
-          phoneNumber: data.phoneNumber,
-          notes: data.notes,
-          date: data.date,
-        };
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.uid;
+      const userDocRef = doc(db, "users", userId);
+      const queuesCollectionRef = collection(userDocRef, "queues");
+
+      const latestQuery = query(queuesCollectionRef, orderBy("date"));
+      const livequeue = onSnapshot(latestQuery, (snapshot) => {
+        this.queues = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            userName: data.userName,
+            phoneNumber: data.phoneNumber,
+            notes: data.notes,
+            date: data.date,
+          };
+        });
       });
-    });
-    onUnmounted(livequeue);
+
+      onUnmounted(livequeue);
+    } else {
+      console.error("User not authenticated.");
+    }
+  },
+  computed: {
+    formattedDate() {
+      return (date) => {
+        const formatted = new Date(date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: true,
+        });
+        return formatted;
+      };
+    },
   },
 };
 </script>
