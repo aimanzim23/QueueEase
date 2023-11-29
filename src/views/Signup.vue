@@ -145,6 +145,18 @@
             <div class="card-body">
               <form @submit.prevent="register">
                 <input
+                  type="name"
+                  placeholder="Name"
+                  aria-label="Name"
+                  v-model="name"
+                />
+                <input
+                  type="companyName"
+                  placeholder="Company Name"
+                  aria-label="Company Name"
+                  v-model="companyName"
+                />
+                <input
                   type="email"
                   placeholder="Email"
                   aria-label="Email"
@@ -156,14 +168,7 @@
                   aria-label="Password"
                   v-model="password"
                 />
-                <!-- <checkbox checked>
-                  <label class="form-check-label" for="flexCheckDefault">
-                    I agree the
-                    <a href="javascript:;" class="text-dark font-weight-bolder"
-                      >Terms and Conditions</a
-                    >
-                  </label>
-                </checkbox> -->
+
                 <div class="text-center">
                   <button
                     type="submit"
@@ -195,6 +200,8 @@
 import Navbar from "@/examples/PageLayout/Navbar.vue";
 import AppFooter from "@/examples/PageLayout/Footer.vue";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { db } from "@/main";
+import { collection, setDoc, doc } from "firebase/firestore";
 
 const body = document.getElementsByTagName("body")[0];
 
@@ -222,26 +229,33 @@ export default {
     return {
       email: "",
       password: "",
+      name: "",
+      companyName: "",
     };
   },
   methods: {
-    register() {
-      const auth = getAuth();
+    register: async function () {
+      try {
+        const auth = getAuth();
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          this.email,
+          this.password
+        );
+        const user = userCredential.user;
 
-      createUserWithEmailAndPassword(auth, this.email, this.password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          // Use the 'user' variable in further logic
-          console.log(user.uid); // Example of accessing user data (UID)
-          // Other actions with 'user'
-          alert("Successfully registered! Please login.");
-          this.$router.push("/dashboard-default");
-          // ...
-        })
-        .catch((error) => {
-          alert(error.message);
-          // Handle errors
+        const usersCollection = collection(db, "users");
+        await setDoc(doc(usersCollection, user.uid), {
+          name: this.name,
+          companyName: this.companyName,
+          // Any other user details you want to store
         });
+
+        alert("Successfully registered! Please login.");
+        this.$router.push("/dashboard-default");
+      } catch (error) {
+        alert("Error registering user: " + error.message);
+      }
     },
   },
 };

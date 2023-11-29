@@ -42,16 +42,14 @@
                   />
                 </div>
                 <div class="d-flex flex-column justify-content-center">
-                  <h6 class="mb-0 text-sm">John Michael</h6>
-                  <p class="text-xs text-secondary mb-0">
-                    john@creative-tim.com
-                  </p>
+                  <h6 class="mb-0 text-sm">Ahmad Abdul</h6>
+                  <p class="text-xs text-secondary mb-0">Staff</p>
                 </div>
               </div>
             </td>
             <td>
-              <p class="text-xs font-weight-bold mb-0">Manager</p>
-              <p class="text-xs text-secondary mb-0">Organization</p>
+              <p class="text-xs font-weight-bold mb-0">0161293921</p>
+              <p class="text-xs text-secondary mb-0">Serving Counter1</p>
             </td>
             <td class="align-middle text-center text-sm">
               <span class="badge badge-sm bg-gradient-success">Online</span>
@@ -72,29 +70,29 @@
             </td>
           </tr>
           <tbody>
-            <tr v-for="(message, index) in messages" :key="index">
-              <td>{{ message.userName }}</td>
-              <td>{{ message.phoneNumber }}</td>
-              <td>{{ message.notes }}</td>
+            <tr v-for="(queue, index) in queues" :key="index">
+              <td>{{ queue.userName }}</td>
+              <td>{{ queue.phoneNumber }}</td>
+              <td>{{ queue.notes }}</td>
               <td>
-                <button @click="deleteMessage(message.id)">Delete</button>
+                <button @click="deleteQueue(queue.id)">Delete</button>
               </td>
             </tr>
           </tbody>
         </table>
         <div>
           <input
-            v-model="newMessage.userName"
+            v-model="newQueue.userName"
             type="text"
             placeholder="User Name"
           />
           <input
-            v-model="newMessage.phoneNumber"
+            v-model="newQueue.phoneNumber"
             type="text"
             placeholder="Phone Number"
           />
-          <input v-model="newMessage.notes" type="text" placeholder="Notes" />
-          <button @click="addNewMessage">Add</button>
+          <input v-model="newQueue.notes" type="text" placeholder="Notes" />
+          <button @click="addNewQueue">Add</button>
         </div>
       </div>
     </div>
@@ -113,42 +111,69 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "@/main";
+import { auth } from "@/main";
 import { onUnmounted, ref } from "vue";
 
 export default {
   name: "queue-list",
   components: {},
   methods: {
-    addNewMessage: function () {
-      addDoc(collection(db, "messages"), {
-        userName: this.newMessage.userName,
-        phoneNumber: this.newMessage.phoneNumber,
-        notes: this.newMessage.notes,
-        date: Date.now(),
-      });
-      // Reset the form fields after adding the message
-      this.newMessage = {
-        userName: "",
-        phoneNumber: "",
-        notes: "",
-      };
+    getCurrentUser() {
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        console.log("Current user:", currentUser);
+      } else {
+        console.log("No user signed in");
+      }
     },
-    updateMessage: function (message) {
-      setDoc(doc(db, "messages", message.id), {
-        userName: message.userName,
-        phoneNumber: message.phoneNumber,
-        notes: message.notes,
-        date: message.date,
+
+    addNewQueue: function () {
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+
+        const userDocRef = doc(db, "users", userId);
+        const queuesCollectionRef = collection(userDocRef, "queues");
+
+        addDoc(queuesCollectionRef, {
+          userName: this.newQueue.userName,
+          phoneNumber: this.newQueue.phoneNumber,
+          notes: this.newQueue.notes,
+          date: Date.now(),
+        })
+          .then(() => {
+            // Reset the form fields after adding the queue
+            this.newQueue = {
+              userName: "",
+              phoneNumber: "",
+              notes: "",
+            };
+            console.log("Queue added to user's collection.");
+          })
+          .catch((error) => {
+            console.error("Error adding queue to user's collection: ", error);
+          });
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+    updateQueue: function (queue) {
+      setDoc(doc(db, "queues", queue.id), {
+        userName: queue.userName,
+        phoneNumber: queue.phoneNumber,
+        notes: queue.notes,
+        date: queue.date,
       });
     },
-    deleteMessage: function (id) {
-      deleteDoc(doc(db, "messages", id));
+    deleteQueue: function (id) {
+      deleteDoc(doc(db, "queues", id));
     },
   },
   data() {
     return {
-      messages: ref([]),
-      newMessage: {
+      queues: ref([]),
+      newQueue: {
         userName: "",
         phoneNumber: "",
         notes: "",
@@ -156,9 +181,9 @@ export default {
     };
   },
   mounted() {
-    const latestQuery = query(collection(db, "messages"), orderBy("date"));
-    const livemessage = onSnapshot(latestQuery, (snapshot) => {
-      this.messages = snapshot.docs.map((doc) => {
+    const latestQuery = query(collection(db, "queues"), orderBy("date"));
+    const livequeue = onSnapshot(latestQuery, (snapshot) => {
+      this.queues = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -169,7 +194,7 @@ export default {
         };
       });
     });
-    onUnmounted(livemessage);
+    onUnmounted(livequeue);
   },
 };
 </script>

@@ -210,6 +210,8 @@
 <script>
 import Breadcrumbs from "../Breadcrumbs.vue";
 import { mapMutations, mapActions } from "vuex";
+import "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 
 export default {
   name: "navbar",
@@ -229,6 +231,23 @@ export default {
     toggleSidebar() {
       this.toggleSidebarColor("bg-white");
       this.navbarMinimize();
+    },
+    logout() {
+      // Get the auth instance
+      const auth = getAuth();
+
+      // Use the signOut function to sign the user out
+      signOut(auth)
+        .then(() => {
+          // Sign-out successful.
+          alert("Successfully logged out");
+          this.$router.push("/");
+        })
+        .catch((error) => {
+          // An error happened.
+          alert(error.message);
+          this.$router.push("/");
+        });
     },
   },
   components: {
