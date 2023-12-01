@@ -24,7 +24,7 @@
                   <p class="mb-0">Enter your email and password to sign in</p>
                 </div>
                 <div class="card-body">
-                  <form @submit.prevent="login">
+                  <form @submit.prevent="handleSubmit">
                     <div class="mb-3">
                       <input
                         type="email"
@@ -102,7 +102,10 @@
 
 <script>
 import Navbar from "@/examples/PageLayout/Navbar.vue";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+// import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 
 const body = document.getElementsByTagName("body")[0];
 
@@ -125,31 +128,47 @@ export default {
     this.$store.state.showFooter = true;
     body.classList.add("bg-gray-100");
   },
-  data() {
-    return {
-      email: "",
-      password: "",
-    };
-  },
-  methods: {
-    login() {
-      const auth = getAuth();
 
-      signInWithEmailAndPassword(auth, this.email, this.password)
-        .then((userCredential) => {
-          // Signed in
-          const user = userCredential.user;
-          console.log(user.uid); // Example of accessing user data (UID)
+  setup() {
+    const email = ref("");
+    const password = ref("");
+    const error = ref(null);
 
-          alert("Welcome bossku lets fucking go baby!!!");
-          this.$router.push("/dashboard-default");
-          // ...
-        })
-        .catch((error) => {
-          alert(error.message);
-          // Handle errors
+    const store = useStore();
+    const router = useRouter();
+
+    const handleSubmit = async () => {
+      try {
+        await store.dispatch("signin", {
+          email: email.value,
+          password: password.value,
         });
-    },
+        router.push("/dashboard-default");
+      } catch (err) {
+        error.value = err.message;
+      }
+    };
+    return { email, password, handleSubmit, error };
   },
 };
+// methods: {
+//   login() {
+//     const auth = getAuth();
+
+//     signInWithEmailAndPassword(auth, this.email, this.password)
+//       .then((userCredential) => {
+//         // Signed in
+//         const user = userCredential.user;
+//         console.log(user.uid); // Example of accessing user data (UID)
+
+//         alert("Welcome bossku lets fucking go baby!!!");
+//         this.$router.push("/dashboard-default");
+//         // ...
+//       })
+//       .catch((error) => {
+//         alert(error.message);
+//         // Handle errors
+//       });
+//   },
+// },
 </script>

@@ -13,7 +13,7 @@ const routes = [
   {
     path: "/",
     name: "/",
-    redirect: "/signin",
+    redirect: "/dashboard-default",
     meta: {
       authRequired: false,
     },
@@ -91,19 +91,19 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  const currentUser = auth.currentUser; // Access the current user using the imported auth instance
+  const currentUser = auth.currentUser;
   const requiresAuth = to.matched.some((record) => record.meta.authRequired);
 
-  if (requiresAuth && !currentUser) {
-    // Redirect to the home page if authentication is required but the user is not logged in
+  if (to.name === "Dashboard" && to.path === "/") {
+    // Redirect to dashboard-default when trying to access the root path
+    next({
+      name: "Dashboard",
+    });
+  } else if (requiresAuth && !currentUser) {
+    // Redirect to signin if authentication is required but the user is not logged in
     alert("You must be logged in to see this page");
     next({
-      path: "/",
-    });
-  } else if (to.name === "Dashboard" && !currentUser) {
-    // Redirect to the home page if attempting to access the dashboard while logged out
-    next({
-      path: "/",
+      name: "Signin",
     });
   } else {
     // Continue to the requested route

@@ -33,15 +33,10 @@
             />
           </div>
         </div>
+
         <ul class="navbar-nav justify-content-end">
           <li class="nav-item d-flex align-items-center">
-            <span
-              @click="logout"
-              class="px-0 nav-link font-weight-bold text-white mr-3"
-            >
-              <i class="fa fa-sign-out"></i>
-              <span class="d-sm-inline d-none">Logout</span>
-            </span>
+            <button @click="handleClick">Logout</button>
           </li>
           <li class="nav-item d-flex align-items-center">
             <router-link
@@ -211,7 +206,7 @@
 import Breadcrumbs from "../Breadcrumbs.vue";
 import { mapMutations, mapActions } from "vuex";
 import "firebase/auth";
-import { getAuth, signOut } from "firebase/auth";
+import { useStore } from "vuex";
 
 export default {
   name: "navbar",
@@ -224,6 +219,13 @@ export default {
   created() {
     this.minNav;
   },
+  setup() {
+    const store = useStore();
+    const handleClick = () => {
+      store.dispatch("logout");
+    };
+    return { handleClick };
+  },
   methods: {
     ...mapMutations(["navbarMinimize", "toggleConfigurator"]),
     ...mapActions(["toggleSidebarColor"]),
@@ -231,23 +233,6 @@ export default {
     toggleSidebar() {
       this.toggleSidebarColor("bg-white");
       this.navbarMinimize();
-    },
-    logout() {
-      // Get the auth instance
-      const auth = getAuth();
-
-      // Use the signOut function to sign the user out
-      signOut(auth)
-        .then(() => {
-          // Sign-out successful.
-          alert("Successfully logged out");
-          this.$router.push("/");
-        })
-        .catch((error) => {
-          // An error happened.
-          alert(error.message);
-          this.$router.push("/");
-        });
     },
   },
   components: {
