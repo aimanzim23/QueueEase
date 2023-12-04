@@ -99,6 +99,9 @@ router.beforeEach((to, from, next) => {
     next({
       name: "Dashboard",
     });
+  } else if (to.name === "MonitorQueue") {
+    // Allow access to MonitorQueue without authentication
+    next();
   } else if (requiresAuth && !currentUser) {
     // Redirect to signin if authentication is required but the user is not logged in
     alert("You must be logged in to see this page");

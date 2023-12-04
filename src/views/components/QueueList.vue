@@ -233,14 +233,12 @@ import {
 } from "firebase/firestore";
 import { db } from "@/main";
 import { auth } from "@/main";
-import { onUnmounted, ref } from "vue";
 
 export default {
   name: "queue-list",
   components: {},
   data() {
     return {
-      queues: ref([]),
       newQueue: {
         userName: "",
         phoneNumber: "",
@@ -288,29 +286,6 @@ export default {
         console.error("User not authenticated.");
       }
     },
-    // updateQueue: function (queue) {
-    //   const user = auth.currentUser;
-    //   if (user) {
-    //     const userId = user.uid;
-    //     const userDocRef = doc(db, "users", userId);
-    //     const queueDocRef = doc(userDocRef, "queues", queue.id);
-
-    //     updateDoc(queueDocRef, {
-    //       userName: queue.userName,
-    //       phoneNumber: queue.phoneNumber,
-    //       notes: queue.notes,
-    //       date: queue.date,
-    //     })
-    //       .then(() => {
-    //         console.log("Queue updated successfully.");
-    //       })
-    //       .catch((error) => {
-    //         console.error("Error updating queue:", error);
-    //       });
-    //   } else {
-    //     console.error("User not authenticated.");
-    //   }
-    // },
 
     deleteQueue: function (id) {
       const user = auth.currentUser;
@@ -333,15 +308,23 @@ export default {
   },
 
   mounted() {
+    const storedData = localStorage.getItem("queueData");
     const user = auth.currentUser;
+
+    if (storedData) {
+      // If there's data in localStorage, load it directly into the Vuex store
+      const parsedData = JSON.parse(storedData);
+      this.$store.commit("setQueues", parsedData);
+    }
+
     if (user) {
       const userId = user.uid;
       const userDocRef = doc(db, "users", userId);
       const queuesCollectionRef = collection(userDocRef, "queues");
-
       const latestQuery = query(queuesCollectionRef, orderBy("date"));
-      const livequeue = onSnapshot(latestQuery, (snapshot) => {
-        this.queues = snapshot.docs.map((doc) => {
+
+      onSnapshot(latestQuery, (snapshot) => {
+        const queues = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
@@ -351,13 +334,17 @@ export default {
             date: data.date,
           };
         });
-      });
 
-      onUnmounted(livequeue);
+        this.$store.commit("setQueues", queues); // Update Vuex store
+
+        // Store data in local storage after fetching
+        localStorage.setItem("queueData", JSON.stringify(queues));
+      });
     } else {
       console.error("User not authenticated.");
     }
   },
+
   computed: {
     formattedDate() {
       return (date) => {
@@ -372,6 +359,9 @@ export default {
         });
         return formatted;
       };
+    },
+    queues() {
+      return this.$store.getters.getQueues;
     },
   },
 };
