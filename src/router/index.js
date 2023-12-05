@@ -7,13 +7,12 @@ import Profile from "../views/Profile.vue";
 import Signup from "../views/Signup.vue";
 import MonitorQueue from "../views/MonitorQueue.vue";
 import Signin from "../views/Signin.vue";
-import { auth } from "@/main";
 
 const routes = [
   {
     path: "/",
     name: "/",
-    redirect: "/dashboard-default",
+    redirect: "/signin",
     meta: {
       authRequired: false,
     },
@@ -23,7 +22,7 @@ const routes = [
     name: "Dashboard",
     component: Dashboard,
     meta: {
-      authRequired: false,
+      authRequired: true,
     },
   },
   {
@@ -88,30 +87,6 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
   linkActiveClass: "active",
-});
-
-router.beforeEach((to, from, next) => {
-  const currentUser = auth.currentUser;
-  const requiresAuth = to.matched.some((record) => record.meta.authRequired);
-
-  if (to.name === "Dashboard" && to.path === "/") {
-    // Redirect to dashboard-default when trying to access the root path
-    next({
-      name: "Dashboard",
-    });
-  } else if (to.name === "MonitorQueue") {
-    // Allow access to MonitorQueue without authentication
-    next();
-  } else if (requiresAuth && !currentUser) {
-    // Redirect to signin if authentication is required but the user is not logged in
-    alert("You must be logged in to see this page");
-    next({
-      name: "Signin",
-    });
-  } else {
-    // Continue to the requested route
-    next();
-  }
 });
 
 export default router;

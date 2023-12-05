@@ -17,6 +17,9 @@ const mutations = {
   setQueues(state, queues) {
     state.queues = queues;
   },
+  addQueue(state, newQueue) {
+    state.queues.push(newQueue);
+  },
   // other mutations related to queues
 };
 
@@ -41,7 +44,7 @@ const actions = {
         // Update Vuex store
         commit("addQueue", newQueue);
 
-        // Update local storage
+        // Update local storage only if Firestore addition is successful
         const storedData = localStorage.getItem("queueData");
         let queues = [];
         if (storedData) {
@@ -57,6 +60,7 @@ const actions = {
       throw new Error("Failed to add queue to Firestore");
     }
   },
+
   async fetchQueues({ commit }) {
     try {
       const queuesSnapshot = await onSnapshot(

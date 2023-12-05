@@ -8,7 +8,11 @@ import ArgonDashboard from "./argon-dashboard";
 //firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  setPersistence,
+  browserSessionPersistence,
+} from "firebase/auth";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -27,10 +31,30 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const appInstance = createApp(App);
-appInstance.use(store);
-appInstance.use(router);
-appInstance.use(ArgonDashboard);
-appInstance.mount("#app");
+setPersistence(auth, browserSessionPersistence)
+  .then(() => {
+    console.log("Auth persistence set to session");
+  })
+  .catch((error) => {
+    console.error("Persistence error:", error);
+  });
+
+auth.onAuthStateChanged((user) => {
+  const appInstance = createApp(App);
+  appInstance.use(store);
+  appInstance.use(router);
+  appInstance.use(ArgonDashboard);
+
+  router.beforeEach((to, from, next) => {
+    const authRequired = to.matched.some((route) => route.meta.authRequired);
+    if (!user && authRequired) {
+      next("/signin");
+    } else {
+      next();
+    }
+  });
+
+  appInstance.mount("#app");
+});
 
 export { app, db, auth };

@@ -46,9 +46,6 @@ export default createStore({
     navbarFixed(state) {
       state.isNavFixed = !state.isNavFixed;
     },
-    setQueues(state, queues) {
-      state.queues = queues;
-    },
   },
   actions: {
     toggleSidebarColor({ commit }, payload) {
