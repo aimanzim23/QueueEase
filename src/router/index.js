@@ -7,6 +7,7 @@ import Profile from "../views/Profile.vue";
 import Signup from "../views/Signup.vue";
 import MonitorQueue from "../views/MonitorQueue.vue";
 import Signin from "../views/Signin.vue";
+import JoinQueue from "../views/JoinQueue.vue";
 
 const routes = [
   {
@@ -77,6 +78,14 @@ const routes = [
     path: "/signup",
     name: "Signup",
     component: Signup,
+    meta: {
+      authRequired: false,
+    },
+  },
+  {
+    path: "/joinqueue",
+    name: "JoinQueue",
+    component: JoinQueue,
     meta: {
       authRequired: false,
     },

@@ -70,10 +70,12 @@ const actions = {
             const data = doc.data();
             return {
               id: doc.id,
+              queueNo: data.queueNo,
               userName: data.userName,
               phoneNumber: data.phoneNumber,
               notes: data.notes,
               date: data.date,
+              status: data.status,
             };
           });
           commit("setQueues", queues); // Update state with fetched queues
@@ -92,6 +94,10 @@ const actions = {
 const getters = {
   getQueues: (state) => state.queues,
   // other getters related to queues
+  getAwaitingQueuesCount: (state) =>
+    state.queues.filter((queue) => queue.status === "Waiting").length,
+  getCompletedQueuesCount: (state) =>
+    state.queues.filter((queue) => queue.status === "Completed").length,
 };
 
 export default {

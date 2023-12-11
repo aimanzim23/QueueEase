@@ -5,8 +5,10 @@
         <div class="col">
           <div class="card" style="width: 15rem; margin-bottom: 2rem">
             <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
-              <p class="card-text">1</p>
+              <h5 class="card-title" style="font-size: 1rem">
+                Total Queue <fa icon="user" />
+              </h5>
+              <p class="card-text">{{ totalQueues }}</p>
             </div>
           </div>
         </div>
@@ -15,8 +17,10 @@
         <div class="col">
           <div class="card" style="width: 15rem; margin-bottom: 2rem">
             <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
-              <p class="card-text">1</p>
+              <h5 class="card-title" style="font-size: 1rem">
+                Awaiting Visits
+              </h5>
+              <p class="card-text">{{ awaitingQueuesCount }}</p>
             </div>
           </div>
         </div>
@@ -25,8 +29,10 @@
         <div class="col">
           <div class="card" style="width: 15rem; margin-bottom: 2rem">
             <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
-              <p class="card-text">1</p>
+              <h5 class="card-title" style="font-size: 1rem">
+                Completed Visits
+              </h5>
+              <p class="card-text">{{ completedQueuesCount }}</p>
             </div>
           </div>
         </div>
@@ -35,8 +41,10 @@
         <div class="col">
           <div class="card" style="width: 15rem; margin-bottom: 2rem">
             <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">Awaiting Visit</h5>
-              <p class="card-text">1</p>
+              <h5 class="card-title" style="font-size: 1rem">
+                Avg Waiting Time
+              </h5>
+              <p class="card-text">12 min</p>
             </div>
           </div>
         </div>
@@ -48,6 +56,7 @@
     <div class="card-header pb-0">
       <h6>Queue List</h6>
     </div>
+
     <div class="card-body px-0 pt-0 pb-2">
       <div class="table-responsive p-0">
         <table class="table align-items-center mb-0">
@@ -55,13 +64,25 @@
             <tr>
               <th
                 class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                style="width: 80px"
+              >
+                Queue No.
+              </th>
+              <th
+                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
                 Name
               </th>
+
               <th
-                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2"
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
-                Phone No.
+                Notes
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Arrival Time
               </th>
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
@@ -71,17 +92,11 @@
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
-                Waiting Time
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
                 Actions
               </th>
-              <th class="text-secondary opacity-7"></th>
             </tr>
           </thead>
-          <tr>
+          <!-- <tr>
             <td>
               <div class="d-flex px-2 py-1">
                 <div>
@@ -118,58 +133,101 @@
                 >Edit</a
               >
             </td>
-          </tr>
+          </tr> -->
+
           <tbody>
             <tr v-for="(queue, index) in queues" :key="index">
-              <td class="mb-0 text-sm">{{ queue.userName }}</td>
-              <td class="text-xs font-weight-bold mb-0">
-                {{ queue.phoneNumber }}
-              </td>
-              <td class="mb-0 text-sm">{{ queue.notes }}</td>
-              <td class="mb-0 text-sm">4 min</td>
-              <td class="mb-0 text-sm">{{ formattedDate(queue.date) }}</td>
+              <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
               <td>
-                <button @click="deleteQueue(queue.id)">Delete</button>
+                <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
+                <p class="text-xs text-secondary mb-0">
+                  {{ queue.phoneNumber }}
+                </p>
+              </td>
+
+              <td class="mb-0 text-sm">{{ queue.notes }}</td>
+              <td class="mb-0 text-sm">
+                {{ formattedArrivalTime(queue.date) }}
+              </td>
+              <td class="mb-0 text-sm">
+                <span
+                  v-if="queue.status === 'Ongoing'"
+                  class="badge text-bg-primary"
+                  >Ongoing</span
+                >
+                <span
+                  v-else-if="queue.status === 'Waiting'"
+                  class="badge text-bg-secondary"
+                  >Waiting</span
+                >
+                <span
+                  v-else-if="queue.status === 'Completed'"
+                  class="badge text-bg-success"
+                  >Completed</span
+                >
+              </td>
+              <td>
+                <div class="circular-buttons-container">
+                  <button
+                    class="circular-button tick-button"
+                    @click="completeQueue(queue.id)"
+                  >
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button
+                    class="circular-button call-button"
+                    @click="ongoingQueue(queue.id)"
+                  >
+                    <i class="fas fa-phone-alt"></i>
+                  </button>
+                  <button
+                    class="circular-button trash-button"
+                    @click="deleteQueue(queue.id)"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
-        <!-- <div>
-          <input
-            v-model="newQueue.userName"
-            type="text"
-            placeholder="User Name"
-          />
-          <input
-            v-model="newQueue.phoneNumber"
-            type="text"
-            placeholder="Phone Number"
-          />
-          <input v-model="newQueue.notes" type="text" placeholder="Notes" />
-          <button @click="addNewQueue">Add</button>
-        </div> -->
+
         <!-- Button trigger modal -->
         <button
           type="button"
           class="btn btn-primary"
           data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
+          data-bs-target="#exampleModalCenter"
+          style="margin-left: 10px"
         >
           Add Queue
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          style="margin-left: 10px; background-color: orange"
+        >
+          Call Next
         </button>
 
         <!-- Bootstrap Modal Structure -->
         <div
           class="modal fade"
-          id="exampleModal"
+          id="exampleModalCenter"
           tabindex="-1"
           aria-labelledby="addForm"
           aria-hidden="true"
         >
-          <div class="modal-dialog">
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="addForm">Add Users To Queue</h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
               </div>
               <div class="modal-body">
                 <!-- Vue.js Form -->
@@ -225,11 +283,14 @@
 import {
   collection,
   addDoc,
-  deleteDoc,
+  updateDoc,
   onSnapshot,
   orderBy,
+  getDoc,
   doc,
   query,
+  getDocs,
+  limit,
 } from "firebase/firestore";
 import { db } from "@/main";
 import { auth } from "@/main";
@@ -265,42 +326,129 @@ export default {
         const userDocRef = doc(db, "users", userId);
         const queuesCollectionRef = collection(userDocRef, "queues");
 
-        addDoc(queuesCollectionRef, {
-          userName: this.newQueue.userName,
-          phoneNumber: this.newQueue.phoneNumber,
-          notes: this.newQueue.notes,
-          date: Date.now(),
-        })
-          .then(() => {
-            // Reset the form fields after adding the queue
-            this.newQueue = {
-              userName: "",
-              phoneNumber: "",
-              notes: "",
-            };
+        // Fetch the existing queues to determine the last queue number
+        const latestQuery = query(
+          queuesCollectionRef,
+          orderBy("queueNo", "desc"),
+          limit(1)
+        );
+
+        getDocs(latestQuery)
+          .then((snapshot) => {
+            let lastQueueNo = 0;
+            if (!snapshot.empty) {
+              // If there are existing queues, get the last queue number
+              lastQueueNo = snapshot.docs[0].data().queueNo || 0;
+            }
+
+            // Increment the queue number for the new queue
+            const newQueueNo = lastQueueNo + 1;
+
+            const initialStatus = "Waiting";
+
+            addDoc(queuesCollectionRef, {
+              userName: this.newQueue.userName,
+              phoneNumber: this.newQueue.phoneNumber,
+              notes: this.newQueue.notes,
+              date: Date.now(),
+              queueNo: newQueueNo,
+              status: initialStatus,
+            })
+              .then(() => {
+                // Reset the form fields after adding the queue
+                this.newQueue = {
+                  userName: "",
+                  phoneNumber: "",
+                  notes: "",
+                };
+              })
+              .catch((error) => {
+                console.error(
+                  "Error adding queue to user's collection: ",
+                  error
+                );
+              });
           })
           .catch((error) => {
-            console.error("Error adding queue to user's collection: ", error);
+            console.error("Error fetching queues: ", error);
           });
       } else {
         console.error("User not authenticated.");
       }
     },
 
-    deleteQueue: function (id) {
+    async ongoingQueue(id) {
       const user = auth.currentUser;
       if (user) {
         const userId = user.uid;
         const userDocRef = doc(db, "users", userId);
         const queueDocRef = doc(userDocRef, "queues", id);
 
-        deleteDoc(queueDocRef)
-          .then(() => {
-            console.log("Queue deleted successfully.");
-          })
-          .catch((error) => {
-            console.error("Error deleting queue:", error);
+        try {
+          const startTimestamp = Date.now(); // Store the start time
+
+          // Update the queue status to 'Ongoing'
+          await updateDoc(queueDocRef, {
+            status: "Ongoing",
+            startTime: startTimestamp, // Add a field to store the start time
           });
+
+          console.log("Queue set to Ongoing status.");
+
+          // Return the startTimestamp to use for calculating service time in completeQueue
+          return startTimestamp;
+        } catch (error) {
+          console.error("Error setting queue to Ongoing:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+    formatServiceTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+
+      return `${hours
+        .toString()
+        .padStart(2, "0")}h ${minutes
+        .toString()
+        .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
+    },
+
+    async completeQueue(id) {
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+        const userDocRef = doc(db, "users", userId);
+        const queueDocRef = doc(userDocRef, "queues", id);
+
+        try {
+          const completedTimestamp = Date.now(); // Store the completion time
+
+          // Get the queue document to retrieve the start time
+          const queueDocSnapshot = await getDoc(queueDocRef);
+          const queueData = queueDocSnapshot.data();
+
+          // Calculate the service time in milliseconds
+          const serviceTime = completedTimestamp - queueData.startTime;
+          const formattedServiceTime = this.formatServiceTime(serviceTime);
+
+          // Update the queue status to 'Completed' and store the service time
+          await updateDoc(queueDocRef, {
+            status: "Completed",
+            completedTime: completedTimestamp, // Add a field to store the completion time
+            serviceTime: formattedServiceTime, // Store the service time
+          });
+
+          console.log(
+            "Queue marked as Completed with service time:",
+            serviceTime
+          );
+        } catch (error) {
+          console.error("Error marking queue as Completed:", error);
+        }
       } else {
         console.error("User not authenticated.");
       }
@@ -328,10 +476,12 @@ export default {
           const data = doc.data();
           return {
             id: doc.id,
+            queueNo: data.queueNo,
             userName: data.userName,
             phoneNumber: data.phoneNumber,
             notes: data.notes,
             date: data.date,
+            status: data.status,
           };
         });
 
@@ -346,12 +496,9 @@ export default {
   },
 
   computed: {
-    formattedDate() {
+    formattedArrivalTime() {
       return (date) => {
-        const formatted = new Date(date).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
+        const formatted = new Date(date).toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "numeric",
           second: "numeric",
@@ -363,6 +510,86 @@ export default {
     queues() {
       return this.$store.getters.getQueues;
     },
+    totalQueues() {
+      return this.queues.length;
+    },
+    awaitingQueuesCount() {
+      return this.$store.getters.getAwaitingQueuesCount;
+    },
+    completedQueuesCount() {
+      return this.$store.getters.getCompletedQueuesCount;
+    },
   },
 };
 </script>
+
+<style scoped>
+/* Add appropriate styles for the badges and text */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white; /* Set the text color */
+  /* Add other necessary styles */
+}
+
+.text-bg-primary {
+  background-color: #007bff; /* Set your primary color */
+}
+
+.text-bg-secondary {
+  background-color: #6c757d; /* Set your secondary color */
+}
+
+.text-bg-success {
+  background-color: #28a745; /* Set your success color */
+}
+.circular-buttons-container {
+  display: flex;
+}
+
+.circular-button {
+  border: none;
+  border-radius: 50%;
+  width: 28px; /* Set your preferred width */
+  height: 28px; /* Set your preferred height */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 10px; /* Set any margin as needed */
+  transition: background-color 0.3s; /* Add a transition effect */
+}
+
+/* Specific styles for different buttons */
+.tick-button {
+  background-color: #28a745; /* Green color for tick button */
+  color: white;
+}
+
+.tick-button:hover {
+  background-color: #218838; /* Darker green color on hover */
+}
+
+.call-button {
+  background-color: #007bff; /* Blue color for call button */
+  color: white;
+}
+
+.call-button:hover {
+  background-color: #0056b3; /* Darker blue color on hover */
+}
+
+.trash-button {
+  background-color: #dc3545; /* Red color for trash button */
+  color: white;
+}
+
+.trash-button:hover {
+  background-color: #c82333; /* Darker red color on hover */
+}
+
+.circular-button i {
+  font-size: 16px; /* Set your preferred icon size */
+}
+</style>

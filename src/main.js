@@ -2,6 +2,9 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import store from "./store";
 import router from "./router";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { fas } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "./assets/css/nucleo-icons.css";
 import "./assets/css/nucleo-svg.css";
 import ArgonDashboard from "./argon-dashboard";
@@ -44,6 +47,8 @@ auth.onAuthStateChanged((user) => {
   appInstance.use(store);
   appInstance.use(router);
   appInstance.use(ArgonDashboard);
+  library.add(fas);
+  appInstance.component("fa", FontAwesomeIcon);
 
   router.beforeEach((to, from, next) => {
     const authRequired = to.matched.some((route) => route.meta.authRequired);
