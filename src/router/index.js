@@ -7,7 +7,7 @@ import Profile from "../views/Profile.vue";
 import Signup from "../views/Signup.vue";
 import MonitorQueue from "../views/MonitorQueue.vue";
 import Signin from "../views/Signin.vue";
-import JoinQueue from "../views/JoinQueue.vue";
+import ControlQueue from "../views/ControlQueue.vue";
 
 const routes = [
   {
@@ -83,9 +83,9 @@ const routes = [
     },
   },
   {
-    path: "/joinqueue",
-    name: "JoinQueue",
-    component: JoinQueue,
+    path: "/controlqueue",
+    name: "ControlQueue",
+    component: ControlQueue,
     meta: {
       authRequired: false,
     },

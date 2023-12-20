@@ -5,6 +5,8 @@ import {
   query,
   orderBy,
   onSnapshot,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/main";
 
@@ -20,7 +22,18 @@ const mutations = {
   addQueue(state, newQueue) {
     state.queues.push(newQueue);
   },
-  // other mutations related to queues
+  updateQueueTimer(
+    state,
+    { queueId, startTime, endTime, elapsedTime, timerRunning }
+  ) {
+    const queueToUpdate = state.queues.find((queue) => queue.id === queueId);
+    if (queueToUpdate) {
+      queueToUpdate.startTime = startTime;
+      queueToUpdate.endTime = endTime;
+      queueToUpdate.elapsedTime = elapsedTime;
+      queueToUpdate.timerRunning = timerRunning;
+    }
+  },
 };
 
 const actions = {
@@ -88,7 +101,85 @@ const actions = {
       throw new Error("Failed to fetch queues from Firestore");
     }
   },
-  // other actions related to queues
+  async startQueueTimer({ commit }, queueId) {
+    try {
+      const queueDocRef = doc(db, "queues", queueId);
+      const queueDocSnapshot = await getDoc(queueDocRef);
+
+      if (queueDocSnapshot.exists()) {
+        const startTime = Date.now();
+        commit("updateQueueTimer", { queueId, startTime, timerRunning: true });
+
+        await updateDoc(queueDocRef, { startTime });
+
+        // ... other logic
+      } else {
+        console.error("Queue not found.");
+      }
+    } catch (error) {
+      console.error("Error starting queue timer:", error);
+      // Handle error
+    }
+  },
+
+  async stopQueueTimer({ commit }, queueId) {
+    try {
+      const queueDocRef = doc(db, "queues", queueId);
+      const queueDocSnapshot = await getDoc(queueDocRef);
+
+      if (queueDocSnapshot.exists()) {
+        const queueToUpdate = queueDocSnapshot.data();
+
+        const endTime = Date.now();
+        const elapsedTime = endTime - queueToUpdate.startTime;
+        commit("updateQueueTimer", {
+          queueId,
+          endTime,
+          elapsedTime,
+          timerRunning: false,
+        });
+
+        await updateDoc(queueDocRef, { endTime, elapsedTime });
+
+        // ... other logic
+      } else {
+        console.error("Queue not found.");
+      }
+    } catch (error) {
+      console.error("Error stopping queue timer:", error);
+      // Handle error
+    }
+  },
+
+  async resetQueueTimer({ commit }, queueId) {
+    try {
+      const queueDocRef = doc(db, "queues", queueId);
+      const queueDocSnapshot = await getDoc(queueDocRef);
+
+      if (queueDocSnapshot.exists()) {
+        commit("updateQueueTimer", {
+          queueId,
+          startTime: null,
+          endTime: null,
+          elapsedTime: 0,
+          timerRunning: false,
+        });
+
+        await updateDoc(queueDocRef, {
+          startTime: null,
+          endTime: null,
+          elapsedTime: 0,
+        });
+
+        // ... other logic
+      } else {
+        console.error("Queue not found.");
+      }
+    } catch (error) {
+      console.error("Error resetting queue timer:", error);
+      // Handle error
+    }
+  },
 };
 
 const getters = {

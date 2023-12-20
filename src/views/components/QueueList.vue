@@ -51,10 +51,142 @@
       </div>
     </div>
   </div>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header text-center border-0 pt-0 pt-lg-2 pb-4 pb-lg-3">
+          Test
+        </div>
+        <div class="card-body pt-0" :style="{ minHeight: '518px' }">
+          <div class="text-center mt-4">
+            <div class="h6 font-weight-300">
+              There are {{ awaitingQueuesCount }} visitors waiting
+            </div>
+            <h2>Queue Number</h2>
+            <div
+              class="mt-4 mb-5 py-2 mx-8 text-center"
+              style="background-color: #e8e8e8; border-radius: 15px"
+            >
+              <div class="display-1">
+                {{ ongoingQueueNo ? ongoingQueueNo : "" }}
+              </div>
+            </div>
+            <div>{{ formatElapsedTime(elapsedTime) }}</div>
+            <div class="text-center">
+              <button
+                type="button"
+                class="btn btn-primary btn-lg"
+                style="background-color: rgb(0, 136, 255)"
+              >
+                Invite next visitor
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-lg"
+                style="background-color: rgb(0, 136, 255)"
+              >
+                Invite by number
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="p-3 pb-0 card-header">
+          <h6 class="mb-0">Waiting List</h6>
+        </div>
+        <div class="p-3 card-body" :style="{ minHeight: '500px' }">
+          <ul class="list-group list-group-flush">
+            <li
+              v-for="(queue, index) in paginatedQueues"
+              :key="index"
+              class="list-group-item d-flex justify-content-between align-items-center border-bottom"
+            >
+              <div>
+                <h6 class="mb-1">#{{ queue.queueNo }}</h6>
+                <p class="mb-1 text-sm">{{ queue.userName }}</p>
+                <p class="text-xs text-secondary mb-0">
+                  {{ queue.phoneNumber }}
+                </p>
+                <p class="mb-0 text-sm">{{ queue.service }}</p>
+                <p class="mb-0 text-sm">
+                  {{ formattedArrivalTime(queue.date) }}
+                </p>
+              </div>
+              <div>
+                <span v-if="queue.status === 'Ongoing'" class="badge bg-primary"
+                  >Ongoing</span
+                >
+                <span
+                  v-else-if="queue.status === 'Waiting'"
+                  class="badge bg-secondary"
+                  >Waiting</span
+                >
+                <span
+                  v-else-if="queue.status === 'Completed'"
+                  class="badge bg-success"
+                  >Completed</span
+                >
+              </div>
+            </li>
+          </ul>
+
+          <!-- Pagination controls -->
+          <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center mt-4">
+              <li
+                class="page-item"
+                :class="{ disabled: pagination.currentPage === 1 }"
+              >
+                <a
+                  class="page-link"
+                  href="#"
+                  aria-label="Previous"
+                  @click.prevent="prevPage"
+                >
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <!-- Display page numbers -->
+              <li
+                class="page-item"
+                v-for="pageNumber in pagination.totalPages"
+                :key="pageNumber"
+                :class="{ active: pageNumber === pagination.currentPage }"
+                @click="goToPage(pageNumber)"
+              >
+                <a class="page-link" href="#">{{ pageNumber }}</a>
+              </li>
+              <li
+                class="page-item"
+                :class="{
+                  disabled: pagination.currentPage === pagination.totalPages,
+                }"
+              >
+                <a
+                  class="page-link"
+                  href="#"
+                  aria-label="Next"
+                  @click.prevent="nextPage"
+                >
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="card">
-    <div class="card-header pb-0">
-      <h6>Queue List</h6>
+    <div
+      class="card-header pb-0 d-flex justify-content-between align-items-center"
+    >
+      <h6 class="mb-0">Queue List</h6>
+      <queue-modal />
     </div>
 
     <div class="card-body px-0 pt-0 pb-2">
@@ -69,7 +201,7 @@
                 Queue No.
               </th>
               <th
-                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
                 Name
               </th>
@@ -77,7 +209,7 @@
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
-                Notes
+                Services
               </th>
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
@@ -90,52 +222,14 @@
                 Status
               </th>
               <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
                 Actions
               </th>
             </tr>
           </thead>
-          <!-- <tr>
-            <td>
-              <div class="d-flex px-2 py-1">
-                <div>
-                  <img
-                    src="../../assets/img/team-2.jpg"
-                    class="avatar avatar-sm me-3"
-                    alt="user1"
-                  />
-                </div>
-                <div class="d-flex flex-column justify-content-center">
-                  <h6 class="mb-0 text-sm">Ahmad Abdul</h6>
-                  <p class="text-xs text-secondary mb-0">Staff</p>
-                </div>
-              </div>
-            </td>
-            <td>
-              <p class="text-xs font-weight-bold mb-0">0161293921</p>
-              <p class="text-xs text-secondary mb-0">Serving Counter1</p>
-            </td>
-            <td class="align-middle text-center text-sm">
-              <span class="badge badge-sm bg-gradient-success">Online</span>
-            </td>
-            <td class="align-middle text-center">
-              <span class="text-secondary text-xs font-weight-bold"
-                >23/04/18</span
-              >
-            </td>
-            <td class="align-middle">
-              <a
-                href="javascript:;"
-                class="text-secondary font-weight-bold text-xs"
-                data-toggle="tooltip"
-                data-original-title="Edit user"
-                >Edit</a
-              >
-            </td>
-          </tr> -->
 
-          <tbody>
+          <tbody class="text-center">
             <tr v-for="(queue, index) in queues" :key="index">
               <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
               <td>
@@ -145,7 +239,7 @@
                 </p>
               </td>
 
-              <td class="mb-0 text-sm">{{ queue.notes }}</td>
+              <td class="mb-0 text-sm">{{ queue.service }}</td>
               <td class="mb-0 text-sm">
                 {{ formattedArrivalTime(queue.date) }}
               </td>
@@ -153,8 +247,8 @@
                 <span
                   v-if="queue.status === 'Ongoing'"
                   class="badge text-bg-primary"
-                  >Ongoing</span
-                >
+                  >Ongoing
+                </span>
                 <span
                   v-else-if="queue.status === 'Waiting'"
                   class="badge text-bg-secondary"
@@ -171,12 +265,16 @@
                   <button
                     class="circular-button tick-button"
                     @click="completeQueue(queue.id)"
+                    :disabled="queue.status === 'Completed'"
+                    :class="{ 'disabled-button': queue.status === 'Completed' }"
                   >
                     <i class="fas fa-check"></i>
                   </button>
                   <button
                     class="circular-button call-button"
                     @click="ongoingQueue(queue.id)"
+                    :disabled="queue.status === 'Completed'"
+                    :title="queue.status === 'Completed' ? 'Disabled' : ''"
                   >
                     <i class="fas fa-phone-alt"></i>
                   </button>
@@ -191,89 +289,6 @@
             </tr>
           </tbody>
         </table>
-
-        <!-- Button trigger modal -->
-        <button
-          type="button"
-          class="btn btn-primary"
-          data-bs-toggle="modal"
-          data-bs-target="#exampleModalCenter"
-          style="margin-left: 10px"
-        >
-          Add Queue
-        </button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          style="margin-left: 10px; background-color: orange"
-        >
-          Call Next
-        </button>
-
-        <!-- Bootstrap Modal Structure -->
-        <div
-          class="modal fade"
-          id="exampleModalCenter"
-          tabindex="-1"
-          aria-labelledby="addForm"
-          aria-hidden="true"
-        >
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="addForm">Add Users To Queue</h5>
-                <button
-                  type="button"
-                  class="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
-              </div>
-              <div class="modal-body">
-                <!-- Vue.js Form -->
-                <form>
-                  <div class="mb-3">
-                    <label for="userName" class="form-label">User Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="newQueue.userName"
-                      placeholder="Enter user name"
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <label for="phoneNumber" class="form-label"
-                      >Phone Number</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="newQueue.phoneNumber"
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
-                    <textarea
-                      class="form-control"
-                      v-model="newQueue.notes"
-                      rows="3"
-                      placeholder="Enter notes"
-                    ></textarea>
-                  </div>
-                  <button
-                    type="button"
-                    class="btn btn-primary"
-                    @click="addNewQueue"
-                  >
-                    Add
-                  </button>
-                </form>
-                <!-- End of Vue.js Form -->
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -282,32 +297,59 @@
 <script>
 import {
   collection,
-  addDoc,
+  deleteDoc,
   updateDoc,
   onSnapshot,
   orderBy,
   getDoc,
   doc,
   query,
-  getDocs,
-  limit,
 } from "firebase/firestore";
-import { db } from "@/main";
-import { auth } from "@/main";
+import { db, auth } from "@/main";
+import QueueModal from "./QueueModal.vue";
 
 export default {
   name: "queue-list",
-  components: {},
+  components: { QueueModal },
   data() {
     return {
       newQueue: {
         userName: "",
         phoneNumber: "",
-        notes: "",
+        service: "",
+      },
+      timerInterval: null,
+      elapsedTime: 0, // Initialize the elapsed time
+      pagination: {
+        currentPage: 1,
+        perPage: 3,
+        totalPages: 1,
       },
     };
   },
+  watch: {
+    waitingQueues() {
+      // Recalculate total pages when the waitingQueues data changes
+      this.pagination.totalPages = Math.ceil(
+        this.waitingQueues.length / this.pagination.perPage
+      );
+    },
+  },
   methods: {
+    prevPage() {
+      if (this.pagination.currentPage > 1) {
+        this.pagination.currentPage--;
+      }
+    },
+    nextPage() {
+      if (this.pagination.currentPage < this.pagination.totalPages) {
+        this.pagination.currentPage++;
+      }
+    },
+    goToPage(pageNumber) {
+      this.pagination.currentPage = pageNumber;
+      // Add logic to update the displayed content
+    },
     getCurrentUser() {
       const currentUser = auth.currentUser;
 
@@ -318,65 +360,18 @@ export default {
       }
     },
 
-    addNewQueue: function () {
-      const user = auth.currentUser;
-      if (user) {
-        const userId = user.uid;
+    formatServiceTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
 
-        const userDocRef = doc(db, "users", userId);
-        const queuesCollectionRef = collection(userDocRef, "queues");
-
-        // Fetch the existing queues to determine the last queue number
-        const latestQuery = query(
-          queuesCollectionRef,
-          orderBy("queueNo", "desc"),
-          limit(1)
-        );
-
-        getDocs(latestQuery)
-          .then((snapshot) => {
-            let lastQueueNo = 0;
-            if (!snapshot.empty) {
-              // If there are existing queues, get the last queue number
-              lastQueueNo = snapshot.docs[0].data().queueNo || 0;
-            }
-
-            // Increment the queue number for the new queue
-            const newQueueNo = lastQueueNo + 1;
-
-            const initialStatus = "Waiting";
-
-            addDoc(queuesCollectionRef, {
-              userName: this.newQueue.userName,
-              phoneNumber: this.newQueue.phoneNumber,
-              notes: this.newQueue.notes,
-              date: Date.now(),
-              queueNo: newQueueNo,
-              status: initialStatus,
-            })
-              .then(() => {
-                // Reset the form fields after adding the queue
-                this.newQueue = {
-                  userName: "",
-                  phoneNumber: "",
-                  notes: "",
-                };
-              })
-              .catch((error) => {
-                console.error(
-                  "Error adding queue to user's collection: ",
-                  error
-                );
-              });
-          })
-          .catch((error) => {
-            console.error("Error fetching queues: ", error);
-          });
-      } else {
-        console.error("User not authenticated.");
-      }
+      return `${hours
+        .toString()
+        .padStart(2, "0")}h ${minutes
+        .toString()
+        .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
     },
-
     async ongoingQueue(id) {
       const user = auth.currentUser;
       if (user) {
@@ -394,7 +389,7 @@ export default {
           });
 
           console.log("Queue set to Ongoing status.");
-
+          this.startTimer();
           // Return the startTimestamp to use for calculating service time in completeQueue
           return startTimestamp;
         } catch (error) {
@@ -404,19 +399,6 @@ export default {
         console.error("User not authenticated.");
       }
     },
-    formatServiceTime(milliseconds) {
-      const seconds = Math.floor(milliseconds / 1000);
-      const hours = Math.floor(seconds / 3600);
-      const minutes = Math.floor((seconds % 3600) / 60);
-      const remainingSeconds = seconds % 60;
-
-      return `${hours
-        .toString()
-        .padStart(2, "0")}h ${minutes
-        .toString()
-        .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
-    },
-
     async completeQueue(id) {
       const user = auth.currentUser;
       if (user) {
@@ -446,8 +428,53 @@ export default {
             "Queue marked as Completed with service time:",
             serviceTime
           );
+          console.log("Timer stopped");
+          this.stopTimer();
         } catch (error) {
           console.error("Error marking queue as Completed:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+    startTimer() {
+      this.timerInterval = setInterval(() => {
+        this.elapsedTime += 1000; // Increment by 1 second (1000ms)
+      }, 1000);
+    },
+    stopTimer() {
+      clearInterval(this.timerInterval); // Clear the interval to stop the timer
+
+      this.elapsedTime = 0;
+    },
+    formatElapsedTime(milliseconds) {
+      // Convert milliseconds to seconds, minutes, and hours
+      let seconds = Math.floor(milliseconds / 1000);
+      let hours = Math.floor(seconds / 3600);
+      seconds %= 3600;
+      let minutes = Math.floor(seconds / 60);
+      seconds %= 60;
+
+      // Add leading zeros if needed for single-digit values
+      const formattedHours = String(hours).padStart(2, "0");
+      const formattedMinutes = String(minutes).padStart(2, "0");
+      const formattedSeconds = String(seconds).padStart(2, "0");
+
+      // Return the formatted time as HH:MM:SS
+      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+    },
+    async deleteQueue(id) {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const userId = user.uid;
+          const userDocRef = doc(db, "users", userId);
+          const queueDocRef = doc(userDocRef, "queues", id);
+
+          await deleteDoc(queueDocRef);
+          console.log("Queue deleted successfully.");
+        } catch (error) {
+          console.error("Error deleting queue:", error);
         }
       } else {
         console.error("User not authenticated.");
@@ -479,7 +506,7 @@ export default {
             queueNo: data.queueNo,
             userName: data.userName,
             phoneNumber: data.phoneNumber,
-            notes: data.notes,
+            service: data.service,
             date: data.date,
             status: data.status,
           };
@@ -494,8 +521,10 @@ export default {
       console.error("User not authenticated.");
     }
   },
-
   computed: {
+    waitingQueues() {
+      return this.queues.filter((queue) => queue.status === "Waiting");
+    },
     formattedArrivalTime() {
       return (date) => {
         const formatted = new Date(date).toLocaleTimeString("en-US", {
@@ -518,6 +547,17 @@ export default {
     },
     completedQueuesCount() {
       return this.$store.getters.getCompletedQueuesCount;
+    },
+    ongoingQueueNo() {
+      const ongoingQueue = this.queues.find(
+        (queue) => queue.status === "Ongoing"
+      );
+      return ongoingQueue ? ongoingQueue.queueNo : null;
+    },
+    paginatedQueues() {
+      const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
+      const end = start + this.pagination.perPage;
+      return this.waitingQueues.slice(start, end);
     },
   },
 };
@@ -591,5 +631,11 @@ export default {
 
 .circular-button i {
   font-size: 16px; /* Set your preferred icon size */
+}
+.circular-button:disabled,
+.circular-button[disabled] {
+  /* Your disabled button styles here */
+  opacity: 0.5; /* Example: Reducing opacity */
+  cursor: not-allowed; /* Example: Change cursor */
 }
 </style>
