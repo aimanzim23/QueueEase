@@ -36,9 +36,6 @@
 
         <ul class="navbar-nav justify-content-end">
           <li class="nav-item d-flex align-items-center">
-            <button @click="handleClick">Logout</button>
-          </li>
-          <li class="nav-item d-flex align-items-center">
             <router-link
               :to="{ name: 'Signin' }"
               class="px-0 nav-link font-weight-bold text-white"
@@ -48,10 +45,8 @@
                 class="fa fa-user"
                 :class="this.$store.state.isRTL ? 'ms-sm-2' : 'me-sm-2'"
               ></i>
-              <span v-if="this.$store.state.isRTL" class="d-sm-inline d-none"
-                >يسجل دخول</span
-              >
-              <span v-else class="d-sm-inline d-none">Sign In</span>
+
+              <span class="d-sm-inline d-none">Sign In</span>
             </router-link>
           </li>
 
@@ -196,6 +191,11 @@
                 </a>
               </li>
             </ul>
+          </li>
+          <li class="px-2 nav-item d-flex align-items-center">
+            <a class="p-0 nav-link text-white" @click="handleClick">
+              <i class="cursor-pointer fa fa-sign-out-alt"></i>
+            </a>
           </li>
         </ul>
       </div>

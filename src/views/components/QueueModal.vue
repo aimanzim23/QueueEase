@@ -105,11 +105,6 @@ export default {
         phoneNumber: "",
         service: "",
       },
-      newService: {
-        serviceName: "",
-        serviceNumber: "",
-        // Other properties related to services
-      },
       availableServices: [],
     };
   },
@@ -117,12 +112,8 @@ export default {
     async fetchServices() {
       const user = auth.currentUser;
       if (user) {
-        const servicesCollectionRef = collection(
-          db,
-          "users",
-          user.uid,
-          "services"
-        );
+        const userDocRef = doc(db, "users", user.uid);
+        const servicesCollectionRef = collection(userDocRef, "services");
 
         try {
           const querySnapshot = await getDocs(servicesCollectionRef);

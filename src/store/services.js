@@ -1,63 +1,51 @@
-// store/services.js
-
-import { collection, addDoc } from "firebase/firestore";
+import { doc, collection, getDocs } from "firebase/firestore";
 import { db, auth } from "@/main";
 
 const state = {
-  services: [],
-  // other service-related state properties
+  availableServices: [], // Initial state for available services
 };
 
 const mutations = {
-  setServices(state, services) {
-    state.services = services;
+  setAvailableServices(state, services) {
+    state.availableServices = services;
   },
-  addService(state, newService) {
-    state.services.push(newService);
-  },
-  // other mutations related to services
 };
 
 const actions = {
-  async addNewService({ commit }, serviceData) {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const servicesCollectionRef = collection(
-          db,
-          "users",
-          user.uid,
-          "services"
-        );
+  async fetchServices({ commit }) {
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(db, "users", user.uid);
+      const servicesCollectionRef = collection(userDocRef, "services");
 
-        // Add service to Firestore
-        const docRef = await addDoc(servicesCollectionRef, serviceData);
+      try {
+        const querySnapshot = await getDocs(servicesCollectionRef);
+        const availableServices = []; // Array to store fetched services
 
-        // Get the ID of the newly added document
-        const newService = {
-          id: docRef.id,
-          ...serviceData,
-        };
+        querySnapshot.forEach((doc) => {
+          const serviceData = doc.data();
+          availableServices.push({
+            id: doc.id,
+            serviceName: serviceData.serviceName,
+            // Other service properties if needed
+          });
+        });
 
-        // Commit mutation to update Vuex store
-        commit("addService", newService);
-
-        // Handle local storage if needed
-        // Example: localStorage.setItem('services', JSON.stringify(state.services));
-      } else {
-        console.error("User not authenticated.");
+        // Commit the mutation to update the store state
+        commit("setAvailableServices", availableServices);
+      } catch (error) {
+        console.error("Error fetching services:", error);
       }
-    } catch (error) {
-      console.error("Error adding service:", error);
-      // Handle error
+    } else {
+      console.error("User not authenticated.");
     }
   },
-  // other actions related to services
 };
 
 const getters = {
-  getServices: (state) => state.services,
-  // other getters related to services
+  getAvailableServices(state) {
+    return state.availableServices;
+  },
 };
 
 export default {

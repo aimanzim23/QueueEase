@@ -1,79 +1,124 @@
 <template>
-  <div class="card">
-    <div class="p-3 pb-0 card-header">
-      <h6 class="mb-0">Waiting List</h6>
+  <div class="col card mb-3">
+    <div class="card-header border-1">
+      <h6 class="mb-3">Waiting List</h6>
     </div>
-    <div class="p-3 card-body">
-      <tr v-for="(queue, index) in queues" :key="index">
-        <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
-        <td>
-          <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
-          <p class="text-xs text-secondary mb-0">
-            {{ queue.phoneNumber }}
-          </p>
-        </td>
+    <div class="card-body pt-0" :style="{ minHeight: '500px' }">
+      <ul class="list-group list-group-flush">
+        <template v-for="(queue, index) in paginatedQueues" :key="index">
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center border-bottom"
+          >
+            <!-- Display filtered queue details -->
+            <div>
+              <h6 class="mb-1">#{{ queue.queueNo }}</h6>
+              <p class="mb-1 text-sm">{{ queue.userName }}</p>
+              <p class="text-xs text-secondary mb-0">
+                {{ queue.phoneNumber }}
+              </p>
+              <p class="mb-0 text-sm">{{ queue.service }}</p>
+              <p class="mb-0 text-sm">
+                {{ formattedArrivalTime(queue.date) }}
+              </p>
+            </div>
+            <div>
+              <span v-if="queue.status === 'Ongoing'" class="badge bg-primary"
+                >Ongoing</span
+              >
+              <span
+                v-else-if="queue.status === 'Waiting'"
+                class="badge bg-secondary"
+                >Waiting</span
+              >
+              <span
+                v-else-if="queue.status === 'Completed'"
+                class="badge bg-success"
+                >Completed</span
+              >
+            </div>
+          </li>
+        </template>
+      </ul>
 
-        <td class="mb-0 text-sm">{{ queue.service }}</td>
-        <td class="mb-0 text-sm">
-          {{ formattedArrivalTime(queue.date) }}
-        </td>
-      </tr>
+      <!-- Pagination controls -->
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center mt-4">
+          <li
+            class="page-item"
+            :class="{ disabled: pagination.currentPage === 1 }"
+          >
+            <a
+              class="page-link"
+              href="#"
+              aria-label="Previous"
+              @click.prevent="prevPage"
+            >
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          <!-- Display page numbers -->
+          <li
+            class="page-item"
+            v-for="pageNumber in pagination.totalPages"
+            :key="pageNumber"
+            :class="{ active: pageNumber === pagination.currentPage }"
+            @click="goToPage(pageNumber)"
+          >
+            <a class="page-link" href="#">{{ pageNumber }}</a>
+          </li>
+          <li
+            class="page-item"
+            :class="{
+              disabled: pagination.currentPage === pagination.totalPages,
+            }"
+          >
+            <a
+              class="page-link"
+              href="#"
+              aria-label="Next"
+              @click.prevent="nextPage"
+            >
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "waiting-list",
   props: {
-    cardTitle: {
-      type: String,
-      default: "Categories",
+    paginatedQueues: {
+      type: Array,
+      default: () => [],
     },
-    title: {
-      type: String,
-      default: "Devices",
+    pagination: {
+      type: Object,
+      default: () => ({
+        currentPage: 1,
+        perPage: 3,
+        totalPages: 1,
+      }),
     },
-    title2: {
-      type: String,
-      default: "Tickets",
+    prevPage: {
+      type: Function,
+      required: true,
     },
-    title3: {
-      type: String,
-      default: "Error logs",
+    nextPage: {
+      type: Function,
+      required: true,
     },
-    title4: {
-      type: String,
-      default: "Happy Users",
+    goToPage: {
+      type: Function,
+      required: true,
     },
-    titleDesc: {
-      type: String,
-      default: "250 in stock",
-    },
-    titleDesc2: {
-      type: String,
-      default: "346+ sold",
-    },
-    title2Desc: {
-      type: String,
-      default: "123 closed",
-    },
-    title4Desc: {
-      type: String,
-      default: "+ 430",
-    },
-    title2Desc2: {
-      type: String,
-      default: "15 open",
-    },
-    title3Desc: {
-      type: String,
-      default: "1 is active",
-    },
-    title3Desc2: {
-      type: String,
-      default: "40 closed",
+    formattedArrivalTime: {
+      type: Function,
+      required: true,
     },
   },
+  // Other component options
 };
 </script>

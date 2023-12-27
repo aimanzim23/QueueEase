@@ -1,182 +1,129 @@
 <template>
-  <div class="col-lg-12">
+  <div class="row">
     <div class="row">
       <div class="col-lg-3 col-md-6 col-12">
-        <div class="col">
-          <div class="card" style="width: 15rem; margin-bottom: 2rem">
-            <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">
-                Total Queue <fa icon="user" />
-              </h5>
-              <p class="card-text">{{ totalQueues }}</p>
-            </div>
-          </div>
-        </div>
+        <card
+          title="Total Queues"
+          :value="filteredTotalQueues"
+          iconClass="fas fa-users"
+          iconBackground="bg-gradient-primary"
+          directionReverse
+        ></card>
       </div>
       <div class="col-lg-3 col-md-6 col-12">
-        <div class="col">
-          <div class="card" style="width: 15rem; margin-bottom: 2rem">
-            <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">
-                Awaiting Visits
-              </h5>
-              <p class="card-text">{{ awaitingQueuesCount }}</p>
-            </div>
-          </div>
-        </div>
+        <card
+          title="Awaiting Visits"
+          :value="filteredAwaitingQueuesCount"
+          iconClass="fas fa-clock"
+          iconBackground="bg-gradient-danger"
+          directionReverse
+        ></card>
       </div>
       <div class="col-lg-3 col-md-6 col-12">
-        <div class="col">
-          <div class="card" style="width: 15rem; margin-bottom: 2rem">
-            <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">
-                Completed Visits
-              </h5>
-              <p class="card-text">{{ completedQueuesCount }}</p>
-            </div>
-          </div>
-        </div>
+        <card
+          title="Completed Visits"
+          :value="filteredCompletedQueuesCount"
+          iconClass="fas fa-check-square"
+          iconBackground="bg-gradient-success"
+          directionReverse
+        ></card>
       </div>
       <div class="col-lg-3 col-md-6 col-12">
-        <div class="col">
-          <div class="card" style="width: 15rem; margin-bottom: 2rem">
-            <div class="card-body" style="font-size: 0.8rem">
-              <h5 class="card-title" style="font-size: 1rem">
-                Avg Waiting Time
-              </h5>
-              <p class="card-text">12 min</p>
-            </div>
-          </div>
-        </div>
+        <card
+          title="Avg Waiting Time"
+          value="10 min"
+          iconClass="fas fa-hourglass-half"
+          iconBackground="bg-gradient-warning"
+          directionReverse
+        ></card>
       </div>
     </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6">
-      <div class="card mb-4">
-        <div class="card-header text-center border-0 pt-0 pt-lg-2 pb-4 pb-lg-3">
-          Test
-        </div>
-        <div class="card-body pt-0" :style="{ minHeight: '518px' }">
-          <div class="text-center mt-4">
-            <div class="h6 font-weight-300">
-              There are {{ awaitingQueuesCount }} visitors waiting
-            </div>
-            <h2>Queue Number</h2>
-            <div
-              class="mt-4 mb-5 py-2 mx-8 text-center"
-              style="background-color: #e8e8e8; border-radius: 15px"
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header text-center border-0">
+            <select
+              id="serviceSelection"
+              v-model="selectedService"
+              class="form-select"
             >
-              <div class="display-1">
-                {{ ongoingQueueNo ? ongoingQueueNo : "" }}
+              <option value="">Show All</option>
+              <option
+                v-for="service in availableServices"
+                :key="service.id"
+                :value="service.serviceName"
+              >
+                {{ service.serviceName }}
+              </option>
+            </select>
+          </div>
+          <div class="card-body pt-0" :style="{ minHeight: '500px' }">
+            <div class="text-center mt-4">
+              <div class="h6 font-weight-300">
+                There are {{ filteredAwaitingQueuesCount }} visitors waiting
               </div>
-            </div>
-            <div>{{ formatElapsedTime(elapsedTime) }}</div>
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-primary btn-lg"
-                style="background-color: rgb(0, 136, 255)"
+              <h2>Queue Number</h2>
+              <div
+                class="mt-4 mb-5 py-3 queue-number-card"
+                style="
+                  border: 2px solid grey;
+                  border-radius: 10px;
+                  background-color: #f8f9fa;
+                "
               >
-                Invite next visitor
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary btn-lg"
-                style="background-color: rgb(0, 136, 255)"
-              >
-                Invite by number
-              </button>
+                <div
+                  v-if="selectedService"
+                  class="display-1"
+                  style="color: grey"
+                >
+                  {{
+                    ongoingQueueNo !== null && ongoingQueueNo !== undefined
+                      ? ongoingQueueNo
+                      : "0"
+                  }}
+                </div>
+                <div v-else class="display-1" style="color: grey">0</div>
+              </div>
+              <div>
+                <timer
+                  :startTimer="startTimer"
+                  :stopTimer="stopTimer"
+                  :elapsedTime="elapsedTime"
+                />
+              </div>
+              <div class="text-center mt-4">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-lg mx-2"
+                  style="background-color: primary"
+                  @click="inviteNextVisitor"
+                  :disabled="!selectedService || isOngoingForSelectedService"
+                >
+                  Invite Next Visitor
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-lg mx-2"
+                  style="background-color: red"
+                  @click="endVisit"
+                  :disabled="!selectedService"
+                >
+                  End Visit
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="col-lg-6">
-      <div class="card mb-4">
-        <div class="p-3 pb-0 card-header">
-          <h6 class="mb-0">Waiting List</h6>
-        </div>
-        <div class="p-3 card-body" :style="{ minHeight: '500px' }">
-          <ul class="list-group list-group-flush">
-            <li
-              v-for="(queue, index) in paginatedQueues"
-              :key="index"
-              class="list-group-item d-flex justify-content-between align-items-center border-bottom"
-            >
-              <div>
-                <h6 class="mb-1">#{{ queue.queueNo }}</h6>
-                <p class="mb-1 text-sm">{{ queue.userName }}</p>
-                <p class="text-xs text-secondary mb-0">
-                  {{ queue.phoneNumber }}
-                </p>
-                <p class="mb-0 text-sm">{{ queue.service }}</p>
-                <p class="mb-0 text-sm">
-                  {{ formattedArrivalTime(queue.date) }}
-                </p>
-              </div>
-              <div>
-                <span v-if="queue.status === 'Ongoing'" class="badge bg-primary"
-                  >Ongoing</span
-                >
-                <span
-                  v-else-if="queue.status === 'Waiting'"
-                  class="badge bg-secondary"
-                  >Waiting</span
-                >
-                <span
-                  v-else-if="queue.status === 'Completed'"
-                  class="badge bg-success"
-                  >Completed</span
-                >
-              </div>
-            </li>
-          </ul>
-
-          <!-- Pagination controls -->
-          <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center mt-4">
-              <li
-                class="page-item"
-                :class="{ disabled: pagination.currentPage === 1 }"
-              >
-                <a
-                  class="page-link"
-                  href="#"
-                  aria-label="Previous"
-                  @click.prevent="prevPage"
-                >
-                  <span aria-hidden="true">&laquo;</span>
-                </a>
-              </li>
-              <!-- Display page numbers -->
-              <li
-                class="page-item"
-                v-for="pageNumber in pagination.totalPages"
-                :key="pageNumber"
-                :class="{ active: pageNumber === pagination.currentPage }"
-                @click="goToPage(pageNumber)"
-              >
-                <a class="page-link" href="#">{{ pageNumber }}</a>
-              </li>
-              <li
-                class="page-item"
-                :class="{
-                  disabled: pagination.currentPage === pagination.totalPages,
-                }"
-              >
-                <a
-                  class="page-link"
-                  href="#"
-                  aria-label="Next"
-                  @click.prevent="nextPage"
-                >
-                  <span aria-hidden="true">&raquo;</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
+      <div class="col-md-6">
+        <waiting-list
+          :paginatedQueues="paginatedQueues"
+          :pagination="pagination"
+          :prevPage="prevPage"
+          :nextPage="nextPage"
+          :goToPage="goToPage"
+          :formattedArrivalTime="formattedArrivalTime"
+        />
       </div>
     </div>
   </div>
@@ -302,15 +249,19 @@ import {
   onSnapshot,
   orderBy,
   getDoc,
+  getDocs,
   doc,
   query,
 } from "firebase/firestore";
 import { db, auth } from "@/main";
 import QueueModal from "./QueueModal.vue";
+import Timer from "./Timer.vue";
+import WaitingList from "./WaitingList.vue";
+import Card from "@/examples/Cards/Card.vue";
 
 export default {
   name: "queue-list",
-  components: { QueueModal },
+  components: { QueueModal, Timer, WaitingList, Card },
   data() {
     return {
       newQueue: {
@@ -325,17 +276,73 @@ export default {
         perPage: 3,
         totalPages: 1,
       },
+      selectedService: null, // To store the selected service ID
+      availableServices: [],
     };
   },
-  watch: {
-    waitingQueues() {
-      // Recalculate total pages when the waitingQueues data changes
-      this.pagination.totalPages = Math.ceil(
-        this.waitingQueues.length / this.pagination.perPage
-      );
-    },
-  },
   methods: {
+    async inviteNextVisitor() {
+      const filteredQueues = this.filteredQueues;
+      if (filteredQueues.length > 0) {
+        const nextQueue = filteredQueues[0]; // Assuming you want to invite the first one in the filtered list
+        await this.ongoingQueue(nextQueue.id);
+        // Update any necessary UI changes or state after inviting the next visitor
+      } else {
+        console.log("No visitors in the waiting queue.");
+        // Handle the case when there are no visitors in the waiting queue
+      }
+    },
+    async endVisit() {
+      const filteredOngoing = this.filteredOngoing;
+      const selectedService = this.selectedService; // Assuming you have a selectedService property
+
+      const ongoingVisit = filteredOngoing.find(
+        (queue) =>
+          queue.status === "Ongoing" && queue.service === selectedService
+      );
+
+      console.log("Ongoing Visit in Selected Service:", ongoingVisit);
+
+      if (ongoingVisit) {
+        console.log(
+          "Attempting to complete the ongoing visit from filtered queues..."
+        );
+        await this.completeQueue(ongoingVisit.id);
+        // Perform any UI updates or state changes after ending the visit
+      } else {
+        console.log(
+          "No ongoing visit found in the selected service within filtered queues."
+        );
+        // Handle the case when there is no ongoing visit in the selected service within filtered queues
+      }
+    },
+
+    async fetchServices() {
+      // Assume `auth.currentUser` is available for the authenticated user
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid); // Reference to the user's document
+        const servicesCollectionRef = collection(userDocRef, "services"); // Reference to the services collection
+
+        try {
+          const querySnapshot = await getDocs(servicesCollectionRef);
+          this.availableServices = []; // Clear existing services
+          querySnapshot.forEach((doc) => {
+            const serviceData = doc.data();
+            // Push each service into the availableServices array
+            this.availableServices.push({
+              id: doc.id,
+              serviceName: serviceData.serviceName, // Adjust based on your service data structure
+              // Other service properties if needed
+            });
+          });
+        } catch (error) {
+          console.error("Error fetching services:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
     prevPage() {
       if (this.pagination.currentPage > 1) {
         this.pagination.currentPage--;
@@ -390,6 +397,7 @@ export default {
 
           console.log("Queue set to Ongoing status.");
           this.startTimer();
+          this.isOngoingQueueForService = false;
           // Return the startTimestamp to use for calculating service time in completeQueue
           return startTimestamp;
         } catch (error) {
@@ -447,22 +455,7 @@ export default {
 
       this.elapsedTime = 0;
     },
-    formatElapsedTime(milliseconds) {
-      // Convert milliseconds to seconds, minutes, and hours
-      let seconds = Math.floor(milliseconds / 1000);
-      let hours = Math.floor(seconds / 3600);
-      seconds %= 3600;
-      let minutes = Math.floor(seconds / 60);
-      seconds %= 60;
 
-      // Add leading zeros if needed for single-digit values
-      const formattedHours = String(hours).padStart(2, "0");
-      const formattedMinutes = String(minutes).padStart(2, "0");
-      const formattedSeconds = String(seconds).padStart(2, "0");
-
-      // Return the formatted time as HH:MM:SS
-      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-    },
     async deleteQueue(id) {
       const user = auth.currentUser;
       if (user) {
@@ -483,6 +476,11 @@ export default {
   },
 
   mounted() {
+    this.fetchServices();
+    const storedSelectedService = localStorage.getItem("selectedService");
+    if (storedSelectedService) {
+      this.selectedService = storedSelectedService;
+    }
     const storedData = localStorage.getItem("queueData");
     const user = auth.currentUser;
 
@@ -521,9 +519,29 @@ export default {
       console.error("User not authenticated.");
     }
   },
+  watch: {
+    filteredQueues() {
+      // Recalculate total pages when the filteredQueues data changes
+      this.pagination.totalPages = Math.ceil(
+        this.filteredQueues.length / this.pagination.perPage
+      );
+    },
+    selectedService(newValue) {
+      // Update local storage when the selected service changes
+      localStorage.setItem("selectedService", newValue);
+    },
+  },
   computed: {
-    waitingQueues() {
-      return this.queues.filter((queue) => queue.status === "Waiting");
+    isOngoingForSelectedService() {
+      if (!this.selectedService) {
+        return false; // No service selected, hence no ongoing queue
+      }
+
+      // Logic to identify if there's an ongoing queue for the selected service
+      return this.queues.some(
+        (queue) =>
+          queue.service === this.selectedService && queue.status === "Ongoing"
+      );
     },
     formattedArrivalTime() {
       return (date) => {
@@ -548,16 +566,68 @@ export default {
     completedQueuesCount() {
       return this.$store.getters.getCompletedQueuesCount;
     },
+    filteredSelectedServiceQueues() {
+      const filteredQueues = this.selectedService
+        ? this.queues.filter((queue) => queue.service === this.selectedService)
+        : this.queues;
+
+      return filteredQueues;
+    },
+    filteredTotalQueues() {
+      return this.filteredSelectedServiceQueues.length;
+    },
+    filteredAwaitingQueuesCount() {
+      return this.filteredSelectedServiceQueues.filter(
+        (queue) => queue.status === "Waiting"
+      ).length;
+    },
+    filteredCompletedQueuesCount() {
+      return this.filteredSelectedServiceQueues.filter(
+        (queue) => queue.status === "Completed"
+      ).length;
+    },
+
     ongoingQueueNo() {
-      const ongoingQueue = this.queues.find(
+      const filteredQueues = this.selectedService
+        ? this.queues.filter((queue) => queue.service === this.selectedService)
+        : this.queues; // Use all queues if no service is selected
+
+      const ongoingQueue = filteredQueues.find(
         (queue) => queue.status === "Ongoing"
       );
       return ongoingQueue ? ongoingQueue.queueNo : null;
     },
+
+    filteredQueues() {
+      let filtered = this.queues;
+
+      if (this.selectedService) {
+        filtered = filtered.filter(
+          (queue) => queue.service === this.selectedService
+        );
+      }
+
+      filtered = filtered.filter((queue) => queue.status === "Waiting");
+
+      return filtered;
+    },
+    filteredOngoing() {
+      let filtered = this.queues;
+
+      if (this.selectedService) {
+        filtered = filtered.filter(
+          (queue) => queue.service === this.selectedService
+        );
+      }
+
+      filtered = filtered.filter((queue) => queue.status === "Ongoing");
+
+      return filtered;
+    },
     paginatedQueues() {
       const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
       const end = start + this.pagination.perPage;
-      return this.waitingQueues.slice(start, end);
+      return this.filteredQueues.slice(start, end);
     },
   },
 };
