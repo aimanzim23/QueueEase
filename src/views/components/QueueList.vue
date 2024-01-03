@@ -39,7 +39,7 @@
       </div>
     </div>
     <div class="row mb-3">
-      <div class="col-md-6">
+      <div class="col-md-6 mb-4">
         <div class="card">
           <div class="card-header text-center border-0">
             <select
