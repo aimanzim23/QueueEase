@@ -9,20 +9,37 @@ import MonitorQueue from "../views/MonitorQueue.vue";
 import Signin from "../views/Signin.vue";
 import ControlQueue from "../views/ControlQueue.vue";
 import Join from "../views/Join.vue";
+import QueueTicket from "../views/QueueTicket.vue";
+import LiveQueue from "../views/LiveQueue.vue";
 
 const routes = [
   {
     path: "/",
     name: "/",
-    redirect: "/signin",
+    redirect: "/dashboard-default",
+  },
+  {
+    path: "/join/:userId/:queueId",
+    name: "Join Queue",
+    component: Join,
     meta: {
       authRequired: false,
     },
   },
   {
-    path: "/join",
-    name: "Join Queue",
-    component: Join,
+    path: "/queue-ticket/:userId/:queueId",
+    name: "QueueTicket",
+    component: QueueTicket,
+    props: true,
+    meta: {
+      authRequired: false,
+    },
+  },
+  {
+    path: "/live-queue",
+    name: "Live Queue",
+    component: LiveQueue,
+    props: true,
     meta: {
       authRequired: false,
     },

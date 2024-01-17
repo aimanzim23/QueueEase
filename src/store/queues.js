@@ -6,16 +6,22 @@ import {
   orderBy,
   onSnapshot,
   getDoc,
+  setDoc,
+  getDocs,
+  deleteDoc,
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/main";
 
 const state = {
   queues: [],
-  // other queues-related state properties
+  archivedQueues: [],
 };
 
 const mutations = {
+  setSessionId(state, sessionId) {
+    state.currentSessionId = sessionId;
+  },
   setQueues(state, queues) {
     state.queues = queues;
   },
@@ -34,9 +40,63 @@ const mutations = {
       queueToUpdate.timerRunning = timerRunning;
     }
   },
+  setArchivedQueues(state, archivedQueues) {
+    state.archivedQueues = archivedQueues;
+  },
 };
 
 const actions = {
+  async endQueuesForToday({ state, commit }) {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+
+        // Reference to the user's document
+        const userDocRef = doc(db, "users", userId);
+
+        // Create a subcollection for storing completed queues under the user
+        const archivesCollectionRef = collection(userDocRef, "archives");
+
+        // Create a single document with a fixed ID for all queues
+        const archiveDocumentRef = doc(archivesCollectionRef, "allQueues");
+
+        // Get existing queues data from the document
+        const existingQueues =
+          (await getDoc(archiveDocumentRef)).data()?.queues || [];
+
+        // Combine existing queues with the current queues
+        const updatedQueues = [...existingQueues, ...state.queues];
+
+        // Update the document with the combined queues
+        await setDoc(archiveDocumentRef, { queues: updatedQueues });
+
+        // Delete/reset the existing queues
+        const queuesCollectionRef = collection(userDocRef, "queues");
+
+        // Get all documents from the existing collection
+        const queueDocs = await getDocs(queuesCollectionRef);
+
+        // Delete each document individually
+        queueDocs.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+
+        // Update Vuex store
+        commit("setQueues", []);
+
+        // Clear local storage
+        localStorage.removeItem("queueData");
+
+        // ... other logic if needed
+      } else {
+        console.error("User not authenticated.");
+      }
+    } catch (error) {
+      console.error("Error ending queues for today:", error);
+      // Handle error
+    }
+  },
   async addQueue({ commit }, queueData) {
     try {
       const user = auth.currentUser;
@@ -73,7 +133,6 @@ const actions = {
       throw new Error("Failed to add queue to Firestore");
     }
   },
-
   async fetchQueues({ commit }) {
     try {
       const queuesSnapshot = await onSnapshot(
@@ -99,6 +158,38 @@ const actions = {
     } catch (error) {
       console.error("Error fetching queues:", error);
       throw new Error("Failed to fetch queues from Firestore");
+    }
+  },
+  async fetchArchivedQueues({ commit }) {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userId = user.uid;
+
+        // Reference to the user's document
+        const userDocRef = doc(db, "users", userId);
+
+        // Reference to the "allQueues" document inside the "archives" collection
+        const archiveDocumentRef = doc(
+          collection(userDocRef, "archives"),
+          "allQueues"
+        );
+
+        // Get existing queues data from the document
+        const archivedQueuesData = (await getDoc(archiveDocumentRef)).data();
+
+        if (archivedQueuesData) {
+          const archivedQueues = archivedQueuesData.queues || [];
+
+          // Update Vuex store with archived queues
+          commit("setArchivedQueues", archivedQueues);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    } catch (error) {
+      console.error("Error fetching archived queues:", error);
+      // Handle error
     }
   },
   async startQueueTimer({ commit }, queueId) {
@@ -184,6 +275,7 @@ const actions = {
 
 const getters = {
   getQueues: (state) => state.queues,
+  getArchivedQueues: (state) => state.archivedQueues,
   // other getters related to queues
   getAwaitingQueuesCount: (state) =>
     state.queues.filter((queue) => queue.status === "Waiting").length,

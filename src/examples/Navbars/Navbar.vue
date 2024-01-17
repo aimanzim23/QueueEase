@@ -19,24 +19,15 @@
         <div
           class="pe-md-3 d-flex align-items-center"
           :class="this.$store.state.isRTL ? 'me-md-auto' : 'ms-md-auto'"
-        >
-          <div class="input-group">
-            <span class="input-group-text text-body">
-              <i class="fas fa-search" aria-hidden="true"></i>
-            </span>
-            <input
-              type="text"
-              class="form-control"
-              :placeholder="
-                this.$store.state.isRTL ? 'أكتب هنا...' : 'Type here...'
-              "
-            />
-          </div>
-        </div>
+        ></div>
 
         <ul class="navbar-nav justify-content-end">
+          <li v-if="user" class="nav-item d-flex align-items-center">
+            <span class="text-white">Logged in as {{ userEmail }}</span>
+          </li>
           <li class="nav-item d-flex align-items-center">
             <router-link
+              v-if="!user"
               :to="{ name: 'Signin' }"
               class="px-0 nav-link font-weight-bold text-white"
               target="_blank"
@@ -45,7 +36,6 @@
                 class="fa fa-user"
                 :class="this.$store.state.isRTL ? 'ms-sm-2' : 'me-sm-2'"
               ></i>
-
               <span class="d-sm-inline d-none">Sign In</span>
             </router-link>
           </li>
@@ -207,6 +197,7 @@ import Breadcrumbs from "../Breadcrumbs.vue";
 import { mapMutations, mapActions } from "vuex";
 import "firebase/auth";
 import { useStore } from "vuex";
+import { computed } from "vue";
 
 export default {
   name: "navbar",
@@ -224,7 +215,13 @@ export default {
     const handleClick = () => {
       store.dispatch("logout");
     };
-    return { handleClick };
+    const user = computed(() => store.getters.getUser);
+    const userEmail = computed(() => (user.value ? user.value.email : null));
+    return {
+      handleClick,
+      user,
+      userEmail,
+    };
   },
   methods: {
     ...mapMutations(["navbarMinimize", "toggleConfigurator"]),

@@ -127,7 +127,7 @@
         </li>
         <li class="nav-item">
           <sidenav-item
-            url="/monitorqueue"
+            url="/live-queue"
             :class="getRoute() === 'monitor queue' ? 'active' : ''"
             :navText="'Live Queue'"
           >
@@ -140,9 +140,9 @@
         </li>
         <li class="nav-item">
           <sidenav-item
-            url="/tables"
+            url="/join"
             :class="getRoute() === 'tables' ? 'active' : ''"
-            :navText="'Chat'"
+            :navText="'Join Queue'"
           >
             <template v-slot:icon>
               <i

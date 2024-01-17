@@ -17,9 +17,6 @@ import {
   browserSessionPersistence,
 } from "firebase/auth";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCyek_KYCR0FVSvcj_q1G8TA_Wjc3wWlog",
@@ -42,24 +39,48 @@ setPersistence(auth, browserSessionPersistence)
     console.error("Persistence error:", error);
   });
 
-auth.onAuthStateChanged((user) => {
-  const appInstance = createApp(App);
-  appInstance.use(store);
-  appInstance.use(router);
-  appInstance.use(ArgonDashboard);
-  library.add(fas);
-  appInstance.component("fa", FontAwesomeIcon);
+const appInstance = createApp(App);
+appInstance.use(store);
+appInstance.use(router);
+appInstance.use(ArgonDashboard);
+library.add(fas);
+appInstance.component("fa", FontAwesomeIcon);
 
-  router.beforeEach((to, from, next) => {
-    const authRequired = to.matched.some((route) => route.meta.authRequired);
-    if (!user && authRequired) {
-      next("/signin");
-    } else {
+// Attach a global navigation guard
+router.beforeEach(async (to, from, next) => {
+  const authRequired = to.matched.some((route) => route.meta.authRequired);
+  const user = auth.currentUser;
+
+  if (user || !authRequired) {
+    // If user is logged in or the route doesn't require authentication
+    next();
+  } else {
+    // User is not logged in and route requires authentication
+    await new Promise((resolve) => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        store.commit("setUser", user);
+        unsubscribe(); // Unsubscribe after getting the user information
+        resolve();
+      });
+    });
+
+    const updatedUser = auth.currentUser;
+    if (updatedUser) {
+      // User logged in during the waiting period
       next();
+    } else {
+      // User not logged in, redirect to signin
+      next("/signin");
     }
-  });
+  }
+});
+
+// Check the initial authentication state
+const unsubscribe = auth.onAuthStateChanged((user) => {
+  store.commit("setUser", user);
 
   appInstance.mount("#app");
+  unsubscribe(); // Unsubscribe after mounting the app
 });
 
 export { app, db, auth };

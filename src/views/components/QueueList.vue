@@ -38,6 +38,7 @@
         ></card>
       </div>
     </div>
+    <button @click="endQueuesForToday">End Queues for Today</button>
     <div class="row mb-3">
       <div class="col-md-6 mb-4">
         <div class="card">
@@ -136,108 +137,7 @@
       <queue-modal />
     </div>
 
-    <div class="card-body px-0 pt-0 pb-2">
-      <div class="table-responsive p-0">
-        <table class="table align-items-center mb-0">
-          <thead>
-            <tr>
-              <th
-                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-                style="width: 80px"
-              >
-                Queue No.
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Name
-              </th>
-
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Services
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Arrival Time
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Status
-              </th>
-              <th
-                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-
-          <tbody class="text-center">
-            <tr v-for="(queue, index) in queues" :key="index">
-              <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
-              <td>
-                <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
-                <p class="text-xs text-secondary mb-0">
-                  {{ queue.phoneNumber }}
-                </p>
-              </td>
-
-              <td class="mb-0 text-sm">{{ queue.service }}</td>
-              <td class="mb-0 text-sm">
-                {{ formattedArrivalTime(queue.date) }}
-              </td>
-              <td class="mb-0 text-sm">
-                <span
-                  v-if="queue.status === 'Ongoing'"
-                  class="badge text-bg-primary"
-                  >Ongoing
-                </span>
-                <span
-                  v-else-if="queue.status === 'Waiting'"
-                  class="badge text-bg-secondary"
-                  >Waiting</span
-                >
-                <span
-                  v-else-if="queue.status === 'Completed'"
-                  class="badge text-bg-success"
-                  >Completed</span
-                >
-              </td>
-              <td>
-                <div class="circular-buttons-container">
-                  <button
-                    class="circular-button tick-button"
-                    @click="completeQueue(queue.id)"
-                    :disabled="queue.status === 'Completed'"
-                    :class="{ 'disabled-button': queue.status === 'Completed' }"
-                  >
-                    <i class="fas fa-check"></i>
-                  </button>
-                  <button
-                    class="circular-button call-button"
-                    @click="ongoingQueue(queue.id)"
-                    :disabled="queue.status === 'Completed'"
-                    :title="queue.status === 'Completed' ? 'Disabled' : ''"
-                  >
-                    <i class="fas fa-phone-alt"></i>
-                  </button>
-                  <button
-                    class="circular-button trash-button"
-                    @click="deleteQueue(queue.id)"
-                  >
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <queue-table :queues="queues" />
   </div>
 </template>
 
@@ -258,10 +158,11 @@ import QueueModal from "./QueueModal.vue";
 import Timer from "./Timer.vue";
 import WaitingList from "./WaitingList.vue";
 import Card from "@/examples/Cards/Card.vue";
+import QueueTable from "./QueueTable.vue";
 
 export default {
   name: "queue-list",
-  components: { QueueModal, Timer, WaitingList, Card },
+  components: { QueueModal, Timer, WaitingList, Card, QueueTable },
   data() {
     return {
       newQueue: {
@@ -281,6 +182,21 @@ export default {
     };
   },
   methods: {
+    async endQueuesForToday() {
+      try {
+        // Call the endQueuesForToday action from the store
+        await this.$store.dispatch("endQueuesForToday");
+        // Optionally, you can add logic to handle success or show a notification
+      } catch (error) {
+        console.error("Error ending queues for today in component:", error);
+        // Handle error or show an error message
+      }
+    },
+    isSameDate(dateTime, today) {
+      // Assuming 'date' is a property in your queue object
+      const queueDate = new Date(dateTime).toLocaleDateString();
+      return queueDate === today;
+    },
     async inviteNextVisitor() {
       const filteredQueues = this.filteredQueues;
       if (filteredQueues.length > 0) {
@@ -599,6 +515,8 @@ export default {
     },
 
     filteredQueues() {
+      const today = new Date().toLocaleDateString(); // Get the current date in string format
+
       let filtered = this.queues;
 
       if (this.selectedService) {
@@ -607,8 +525,10 @@ export default {
         );
       }
 
-      filtered = filtered.filter((queue) => queue.status === "Waiting");
-
+      filtered = filtered.filter(
+        (queue) =>
+          queue.status === "Waiting" && this.isSameDate(queue.date, today)
+      );
       return filtered;
     },
     filteredOngoing() {

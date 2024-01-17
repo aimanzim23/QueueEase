@@ -1,4 +1,5 @@
 <template>
+  <div><button @click="createQueue">Create Queue</button></div>
   <div class="py-4 container-fluid">
     <div class="row">
       <div class="col-lg-12">
@@ -127,6 +128,8 @@ import US from "@/assets/img/icons/flags/US.png";
 import DE from "@/assets/img/icons/flags/DE.png";
 import GB from "@/assets/img/icons/flags/GB.png";
 import BR from "@/assets/img/icons/flags/BR.png";
+import { v4 as uuidv4 } from "uuid";
+import { auth } from "@/main";
 
 export default {
   name: "dashboard-default",
@@ -204,6 +207,41 @@ export default {
     GradientLineChart,
     Carousel,
     CategoriesCard,
+  },
+  methods: {
+    async createQueue() {
+      try {
+        const user = auth.currentUser;
+
+        if (user) {
+          // Generate a unique ID for the queue
+          const queueId = uuidv4();
+
+          // Associate the queueId with the current user
+          const userData = {
+            userId: user.uid,
+            queueId: queueId,
+          };
+
+          // Dispatch Vuex action to store user data
+          await this.$store.dispatch("saveUserData", userData);
+
+          // Create the join link with userId and queueId as parameters
+          const joinLink = `http://localhost:8080/join/${user.uid}/${queueId}`;
+          console.log("Join Link:", joinLink);
+
+          // Now you can store the queueId in your Vuex store or Firebase
+          // For testing purposes, you can log the join link or display it in your UI.
+
+          // Optionally, you can perform additional actions here, such as creating the queue in Firestore.
+        } else {
+          console.error("User not authenticated.");
+        }
+      } catch (error) {
+        console.error("Error creating queue:", error);
+        // Handle errors here
+      }
+    },
   },
 };
 </script>

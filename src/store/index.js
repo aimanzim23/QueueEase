@@ -2,12 +2,14 @@ import { createStore } from "vuex";
 import authModule from "./auth";
 import queuesModule from "./queues";
 import servicesModule from "./services";
+import fetchUserData from "./fetchUserData";
 
 export default createStore({
   modules: {
     auth: authModule,
     queues: queuesModule,
     services: servicesModule,
+    fetchUserData: fetchUserData,
   },
   state: {
     hideConfigButton: false,

@@ -10,13 +10,16 @@ import router from "@/router";
 const state = {
   user: null,
   authIsReady: false,
+  isLoggedIn: false,
   // other auth-related state properties
 };
 
 const mutations = {
+  setLoggedIn(state, payload) {
+    state.isLoggedIn = payload;
+  },
   setUser(state, payload) {
     state.user = payload;
-    console.log("user state changed:", state.user);
   },
   setAuthIsReady(state, payload) {
     state.authIsReady = payload;
@@ -37,13 +40,21 @@ const actions = {
       throw new Error("The signup was unsuccessful");
     }
   },
-  async signin(context, { email, password }) {
-    console.log("login action");
+  async signin({ commit }, { email, password }) {
     try {
       const res = await signInWithEmailAndPassword(auth, email, password);
-      context.commit("setUser", res.user);
-      return res.user; // Return the user for verification in the component
+
+      // Wait for the authentication state to change
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        commit("setUser", user);
+        commit("setLoggedIn", true);
+        console.log("Signin action executed");
+        unsubscribe(); // Unsubscribe after updating the user information
+      });
+
+      return res.user;
     } catch (error) {
+      console.error("Login failed:", error);
       throw new Error("The login was unsuccessful");
     }
   },
@@ -51,7 +62,6 @@ const actions = {
     try {
       // Perform the logout operation from Firebase
       await signOut(auth);
-
       // Reset user-related data in your Vuex store
       commit("clearUserData"); // Adjust this mutation to clear user-specific data
 
@@ -62,16 +72,22 @@ const actions = {
       throw new Error("Logout failed");
     }
   },
+
   async initializeAuth({ commit }) {
     const unsub = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed. User:", user);
       commit("setAuthIsReady", true);
-      commit("setUser", user);
-      if (!user) {
-        console.log("User not authenticated. Redirecting to signin...");
-        router.push("/signin"); // Redirect to signin if the user is not logged in
-      } else {
+
+      if (user) {
+        commit("setUser", user);
         console.log("User authenticated. Redirecting to dashboard...");
-        router.push("/dashboard-default"); // Redirect to dashboard if the user is logged in
+        router.push("/dashboard-default");
+      } else {
+        // Set the user to a default value when not authenticated
+        const defaultUser = { email: null };
+        commit("setUser", defaultUser);
+        console.log("User not authenticated. Redirecting to signin...");
+        router.push("/signin");
       }
 
       unsub();
@@ -81,7 +97,7 @@ const actions = {
 
 const getters = {
   getUser: (state) => state.user,
-  // other auth-related getters
+  isLoggedIn: (state) => state.isLoggedIn,
 };
 
 export default {

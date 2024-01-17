@@ -143,6 +143,13 @@ export default {
           email: email.value,
           password: password.value,
         });
+        // Fetch the user information after successful signin
+        const user = await store.dispatch("getUserInfo");
+
+        // Commit the user information to the Vuex store
+        store.commit("setUser", user);
+
+        // Access the user state after committing the mutation
         router.push("/dashboard-default");
       } catch (err) {
         error.value = err.message;

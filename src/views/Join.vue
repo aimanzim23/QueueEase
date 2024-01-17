@@ -35,7 +35,6 @@
             placeholder="Choose service"
           >
             <option disabled value="">Please select a service</option>
-            <!-- Populate options from fetched services -->
             <option
               v-for="(service, index) in services"
               :key="index"
@@ -50,7 +49,7 @@
           <button
             type="button"
             class="btn btn-primary"
-            @click="enableNotifications"
+            @click="openTelegramBot"
           >
             Enable Notification
           </button>
@@ -61,16 +60,16 @@
 </template>
 
 <script>
-import { db, auth } from "@/main";
+import { db } from "@/main";
 import {
   collection,
   addDoc,
-  orderBy,
-  doc,
-  query,
   getDocs,
+  query,
+  orderBy,
   limit,
 } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
 export default {
   name: "join",
@@ -85,32 +84,48 @@ export default {
     };
   },
   methods: {
-    async fetchServices() {
-      const user = auth.currentUser;
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const servicesCollectionRef = collection(userDocRef, "services");
+    // async fetchServices() {
+    //   const user = auth.currentUser;
+    //   if (user) {
+    //     const userDocRef = doc(db, "users", user.uid);
+    //     const servicesCollectionRef = collection(userDocRef, "services");
 
-        try {
-          const querySnapshot = await getDocs(servicesCollectionRef);
-          this.services = [];
-          querySnapshot.forEach((doc) => {
-            this.services.push(doc.data());
-          });
-        } catch (error) {
-          console.error("Error fetching services:", error);
-        }
-      } else {
-        console.error("User not authenticated.");
+    //     try {
+    //       const querySnapshot = await getDocs(servicesCollectionRef);
+    //       this.services = [];
+    //       querySnapshot.forEach((doc) => {
+    //         this.services.push(doc.data());
+    //       });
+    //     } catch (error) {
+    //       console.error("Error fetching services:", error);
+    //     }
+    //   } else {
+    //     console.error("User not authenticated.");
+    //   }
+    // },
+    async fetchServices() {
+      try {
+        const userId = this.$route.params.userId;
+        const servicesCollectionRef = collection(
+          db,
+          "users",
+          userId,
+          "services"
+        );
+
+        const querySnapshot = await getDocs(servicesCollectionRef);
+        this.services = [];
+        querySnapshot.forEach((doc) => {
+          this.services.push(doc.data());
+        });
+      } catch (error) {
+        console.error("Error fetching services:", error);
       }
     },
-    addNewQueue: function () {
-      const user = auth.currentUser;
-      if (user) {
-        const userId = user.uid;
-
-        const userDocRef = doc(db, "users", userId);
-        const queuesCollectionRef = collection(userDocRef, "queues");
+    async addNewQueue() {
+      try {
+        const userId = this.$route.params.userId;
+        const queuesCollectionRef = collection(db, "users", userId, "queues");
 
         // Fetch the existing queues to determine the last queue number
         const latestQuery = query(
@@ -119,53 +134,69 @@ export default {
           limit(1)
         );
 
-        getDocs(latestQuery)
-          .then((snapshot) => {
-            let lastQueueNo = 0;
-            if (!snapshot.empty) {
-              // If there are existing queues, get the last queue number
-              lastQueueNo = snapshot.docs[0].data().queueNo || 0;
-            }
+        const snapshot = await getDocs(latestQuery);
+        let lastQueueNo = 0;
 
-            // Increment the queue number for the new queue
-            const newQueueNo = lastQueueNo + 1;
+        if (!snapshot.empty) {
+          lastQueueNo = snapshot.docs[0].data().queueNo || 0;
+        }
 
-            const initialStatus = "Waiting";
+        // Increment the queue number for the new queue
+        const newQueueNo = lastQueueNo + 1;
+        const initialStatus = "Waiting";
 
-            addDoc(queuesCollectionRef, {
-              userName: this.newQueue.userName,
-              phoneNumber: this.newQueue.phoneNumber,
-              service: this.newQueue.service,
-              date: Date.now(),
-              queueNo: newQueueNo,
-              status: initialStatus,
-            })
-              .then(() => {
-                // Reset the form fields after adding the queue
-                this.newQueue = {
-                  userName: "",
-                  phoneNumber: "",
-                  service: "",
-                };
-              })
-              .catch((error) => {
-                console.error(
-                  "Error adding queue to user's collection: ",
-                  error
-                );
-              });
-          })
-          .catch((error) => {
-            console.error("Error fetching queues: ", error);
-          });
-      } else {
-        console.error("User not authenticated.");
+        // Generate a unique queue ID using uuid
+        const queueId = uuidv4();
+
+        // Construct queue data object from the form
+        const queueData = {
+          userId: userId,
+          queueId,
+          userName: this.newQueue.userName,
+          service: this.newQueue.service,
+          status: initialStatus,
+          phoneNumber: this.newQueue.phoneNumber,
+          date: Date.now(),
+          queueNo: newQueueNo, // Add the queueNo field
+        };
+
+        // Add queue data to Firestore in the "queues" collection under the specific user
+        await addDoc(queuesCollectionRef, queueData);
+        console.log("Queue added to user's queues:", queueData);
+
+        // Optionally, you can redirect or perform other actions here.
+        this.$router.push({
+          name: "QueueTicket",
+          params: {
+            userId: userId,
+            queueId: queueId,
+          },
+        });
+
+        // Reset the form fields after adding the queue
+        this.newQueue = {
+          userName: "",
+          phoneNumber: "",
+        };
+      } catch (error) {
+        console.error("Error adding queue:", error);
+        // Handle errors here
       }
     },
   },
   mounted() {
     // Fetch services when the component is mounted
     this.fetchServices();
+
+    // Retrieve previously saved form data from Vuex on mount
+    const savedFormData = this.$store.getters.getSavedUserData;
+
+    // If there's previously saved data, update the form fields
+    if (savedFormData) {
+      this.newQueue.userName = savedFormData.userName || "";
+      this.newQueue.phoneNumber = savedFormData.phoneNumber || "";
+      this.newQueue.service = savedFormData.service || "";
+    }
   },
 };
 </script>

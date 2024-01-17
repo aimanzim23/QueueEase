@@ -95,6 +95,7 @@ import {
   getDocs,
   limit,
 } from "firebase/firestore";
+import { v4 as uuidv4 } from "uuid";
 
 export default {
   name: "queue-modal",
@@ -136,6 +137,9 @@ export default {
         const userDocRef = doc(db, "users", userId);
         const queuesCollectionRef = collection(userDocRef, "queues");
 
+        // Generate a unique queue ID using uuid
+        const queueId = uuidv4();
+
         // Fetch the existing queues to determine the last queue number
         const latestQuery = query(
           queuesCollectionRef,
@@ -147,16 +151,15 @@ export default {
           .then((snapshot) => {
             let lastQueueNo = 0;
             if (!snapshot.empty) {
-              // If there are existing queues, get the last queue number
               lastQueueNo = snapshot.docs[0].data().queueNo || 0;
             }
 
-            // Increment the queue number for the new queue
             const newQueueNo = lastQueueNo + 1;
-
             const initialStatus = "Waiting";
 
+            // Add the queue with the generated queueId
             addDoc(queuesCollectionRef, {
+              queueId, // Add the queueId field
               userName: this.newQueue.userName,
               phoneNumber: this.newQueue.phoneNumber,
               service: this.newQueue.service,
