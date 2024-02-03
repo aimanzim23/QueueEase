@@ -83,13 +83,25 @@
           </tbody>
         </table>
         <div class="pagination">
-          <button @click="prevPage" :disabled="currentPage === 1">
-            <span>&#9664;</span> Previous
-          </button>
-          <span class="current-page">{{ currentPage }} / {{ totalPages }}</span>
-          <button @click="nextPage" :disabled="currentPage === totalPages">
-            Next <span>&#9654;</span>
-          </button>
+          <div class="circular-buttons-container">
+            <button
+              class="circular-button tick-button"
+              @click="prevPage"
+              :disabled="currentPage === 1"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="current-page"
+              >{{ currentPage }} / {{ totalPages }}</span
+            >
+            <button
+              class="circular-button tick-button"
+              @click="nextPage"
+              :disabled="currentPage === totalPages"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -240,5 +252,35 @@ export default {
 
 .current-page {
   margin: 0 10px;
+}
+.circular-buttons-container {
+  display: flex;
+  align-items: center;
+}
+
+.circular-button {
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
+.tick-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.tick-button:hover {
+  background-color: #218838;
+}
+
+.circular-button i {
+  font-size: 16px;
 }
 </style>

@@ -33,7 +33,7 @@
           <sidenav-item
             url="/tables"
             :class="getRoute() === 'tables' ? 'active' : ''"
-            :navText="'Tables'"
+            :navText="'Queue History'"
           >
             <template v-slot:icon>
               <i
@@ -43,11 +43,7 @@
           </sidenav-item>
         </li>
         <li class="nav-item">
-          <sidenav-item
-            url="/rtl-page"
-            :class="getRoute() === 'rtl-page' ? 'active' : ''"
-            navText="RTM"
-          >
+          <sidenav-item url="/qr" navText="QR Code">
             <template v-slot:icon>
               <i class="ni ni-world-2 text-danger text-sm opacity-10"></i>
             </template>
@@ -72,7 +68,7 @@
             </template>
           </sidenav-item>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <sidenav-item
             url="/signin"
             :class="getRoute() === 'signin' ? 'active' : ''"
@@ -95,7 +91,7 @@
               <i class="ni ni-collection text-info text-sm opacity-10"></i>
             </template>
           </sidenav-item>
-        </li>
+        </li> -->
       </ul>
     </div>
   </div>
@@ -135,30 +131,6 @@
               <i
                 class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
               ></i>
-            </template>
-          </sidenav-item>
-        </li>
-        <li class="nav-item">
-          <sidenav-item
-            url="/join"
-            :class="getRoute() === 'tables' ? 'active' : ''"
-            :navText="'Join Queue'"
-          >
-            <template v-slot:icon>
-              <i
-                class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
-              ></i>
-            </template>
-          </sidenav-item>
-        </li>
-        <li class="nav-item">
-          <sidenav-item
-            url="/rtl-page"
-            :class="getRoute() === 'rtl-page' ? 'active' : ''"
-            navText="Announcement"
-          >
-            <template v-slot:icon>
-              <i class="ni ni-world-2 text-danger text-sm opacity-10"></i>
             </template>
           </sidenav-item>
         </li>

@@ -38,7 +38,7 @@
         ></card>
       </div>
     </div>
-    <button @click="endQueuesForToday">End Queues for Today</button>
+
     <div class="row mb-3">
       <div class="col-md-6 mb-4">
         <div class="card">
@@ -182,16 +182,6 @@ export default {
     };
   },
   methods: {
-    async endQueuesForToday() {
-      try {
-        // Call the endQueuesForToday action from the store
-        await this.$store.dispatch("endQueuesForToday");
-        // Optionally, you can add logic to handle success or show a notification
-      } catch (error) {
-        console.error("Error ending queues for today in component:", error);
-        // Handle error or show an error message
-      }
-    },
     isSameDate(dateTime, today) {
       // Assuming 'date' is a property in your queue object
       const queueDate = new Date(dateTime).toLocaleDateString();
@@ -515,7 +505,7 @@ export default {
     },
 
     filteredQueues() {
-      const today = new Date().toLocaleDateString(); // Get the current date in string format
+      // const today = new Date().toLocaleDateString(); // Get the current date in string format
 
       let filtered = this.queues;
 
@@ -525,10 +515,7 @@ export default {
         );
       }
 
-      filtered = filtered.filter(
-        (queue) =>
-          queue.status === "Waiting" && this.isSameDate(queue.date, today)
-      );
+      filtered = filtered.filter((queue) => queue.status === "Waiting");
       return filtered;
     },
     filteredOngoing() {

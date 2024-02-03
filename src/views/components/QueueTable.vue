@@ -40,7 +40,7 @@
           </tr>
         </thead>
         <tbody class="text-center">
-          <tr v-for="(queue, index) in queues" :key="index">
+          <tr v-for="(queue, index) in paginatedQueues" :key="index">
             <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
             <td>
               <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
@@ -100,6 +100,48 @@
         </tbody>
       </table>
     </div>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination justify-content-center mt-4">
+        <li
+          class="page-item"
+          :class="{ disabled: pagination.currentPage === 1 }"
+        >
+          <a
+            class="page-link"
+            href="#"
+            aria-label="Previous"
+            @click.prevent="prevPage"
+          >
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <!-- Display page numbers -->
+        <li
+          class="page-item"
+          v-for="pageNumber in pagination.totalPages"
+          :key="pageNumber"
+          :class="{ active: pageNumber === pagination.currentPage }"
+          @click.prevent="goToPage(pageNumber)"
+        >
+          <a class="page-link" href="#">{{ pageNumber }}</a>
+        </li>
+        <li
+          class="page-item"
+          :class="{
+            disabled: pagination.currentPage === pagination.totalPages,
+          }"
+        >
+          <a
+            class="page-link"
+            href="#"
+            aria-label="Next"
+            @click.prevent="nextPage"
+          >
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -115,7 +157,53 @@ export default {
     },
     // Add other props as needed
   },
+  data() {
+    return {
+      // Define pagination properties
+      pagination: {
+        currentPage: 1,
+        perPage: 10, // Set your preferred number of items per page
+        totalPages: 1,
+      },
+    };
+  },
+  computed: {
+    // Calculate paginated queues based on current page
+    paginatedQueues() {
+      const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
+      const end = start + this.pagination.perPage;
+      return this.queues.slice(start, end);
+    },
+  },
+  watch: {
+    queues() {
+      this.updateTotalPages();
+    },
+    "pagination.perPage"() {
+      this.updateTotalPages();
+    },
+  },
   methods: {
+    updateTotalPages() {
+      this.pagination.totalPages = Math.ceil(
+        this.queues.length / this.pagination.perPage
+      );
+    },
+    prevPage() {
+      if (this.pagination.currentPage > 1) {
+        this.pagination.currentPage--;
+      }
+    },
+    // Update current page to next page
+    nextPage() {
+      if (this.pagination.currentPage < this.pagination.totalPages) {
+        this.pagination.currentPage++;
+      }
+    },
+    // Update current page to a specific page
+    goToPage(pageNumber) {
+      this.pagination.currentPage = pageNumber;
+    },
     formattedArrivalTime(date) {
       const formatted = new Date(date).toLocaleTimeString("en-US", {
         hour: "numeric",
@@ -124,15 +212,6 @@ export default {
         hour12: true,
       });
       return formatted;
-    },
-    formatServiceTime(serviceTime) {
-      // You can implement your logic to format service time here
-      // For example, converting milliseconds to a readable format
-      const seconds = Math.floor(serviceTime / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-
-      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     },
     async completeQueue(id) {
       const user = auth.currentUser;

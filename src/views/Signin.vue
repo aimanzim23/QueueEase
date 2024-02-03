@@ -26,33 +26,41 @@
                 <div class="card-body">
                   <form @submit.prevent="handleSubmit">
                     <div class="mb-3">
+                      <label for="email" class="form-label visually-hidden"
+                        >Email</label
+                      >
                       <input
                         type="email"
+                        class="form-control"
+                        id="email"
                         placeholder="Email"
                         name="email"
                         size="lg"
                         v-model="email"
+                        required
                       />
                     </div>
                     <div class="mb-3">
+                      <label for="password" class="form-label visually-hidden"
+                        >Password</label
+                      >
                       <input
                         type="password"
+                        class="form-control"
+                        id="password"
                         placeholder="Password"
                         name="password"
                         size="lg"
                         v-model="password"
+                        required
                       />
                     </div>
-                    <!-- <argon-switch id="rememberMe">Remember me</argon-switch> -->
 
                     <div class="text-center">
                       <button
                         type="submit"
-                        class="mt-4"
-                        variant="gradient"
-                        color="success"
+                        class="btn btn-success btn-lg mt-4"
                         fullWidth
-                        size="lg"
                       >
                         Sign in
                       </button>
@@ -65,8 +73,9 @@
                     <a
                       href="javascript:;"
                       class="text-success text-gradient font-weight-bold"
-                      >Sign up</a
                     >
+                      Sign up
+                    </a>
                   </p>
                 </div>
               </div>
@@ -85,11 +94,10 @@
                 <h4
                   class="mt-5 text-white font-weight-bolder position-relative"
                 >
-                  "Attention is the new currency"
+                  QueueEase where queueing is made easy!
                 </h4>
                 <p class="text-white position-relative">
-                  The more effortless the writing looks, the more effort the
-                  writer actually put into the process.
+                  A Modern Queue Management System for your business
                 </p>
               </div>
             </div>

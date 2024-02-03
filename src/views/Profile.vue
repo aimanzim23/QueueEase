@@ -17,7 +17,7 @@
             <div class="col-auto">
               <div class="avatar avatar-xl position-relative">
                 <img
-                  src="../assets/img/team-1.jpg"
+                  src="../assets/img/barberlogo.jpg"
                   alt="profile_image"
                   class="shadow-sm w-100 border-radius-lg"
                 />
@@ -25,15 +25,15 @@
             </div>
             <div class="col-auto my-auto">
               <div class="h-100">
-                <h5 class="mb-1">Sayo Kravits</h5>
-                <p class="mb-0 font-weight-bold text-sm">Public Relations</p>
+                <h5 class="mb-1">Man Barber</h5>
+                <p class="mb-0 font-weight-bold text-sm">Aiman Hazim</p>
               </div>
             </div>
             <div
               class="mx-auto mt-3 col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0"
             >
               <div class="nav-wrapper position-relative end-0">
-                <ul
+                <!-- <ul
                   class="p-1 bg-transparent nav nav-pills nav-fill"
                   role="tablist"
                 >
@@ -190,7 +190,7 @@
                       <span class="ms-1">Settings</span>
                     </a>
                   </li>
-                </ul>
+                </ul> -->
               </div>
             </div>
           </div>
@@ -204,9 +204,9 @@
             <div class="card-header pb-0">
               <div class="d-flex align-items-center">
                 <p class="mb-0">Edit Profile</p>
-                <argon-button color="success" size="sm" class="ms-auto"
+                <!-- <argon-button color="success" size="sm" class="ms-auto"
                   >Settings</argon-button
-                >
+                > -->
               </div>
             </div>
             <div class="card-body">
@@ -269,11 +269,11 @@
                 </div>
               </div>
               <hr class="horizontal dark" />
-              <p class="text-uppercase text-sm">About me</p>
+              <p class="text-uppercase text-sm">About</p>
               <div class="row">
                 <div class="col-md-12">
                   <label for="example-text-input" class="form-control-label"
-                    >About me</label
+                    >About</label
                   >
                   <argon-input
                     type="text"
@@ -284,9 +284,9 @@
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <!-- <div class="col-md-4">
           <profile-card />
-        </div>
+        </div> -->
       </div>
     </div>
   </main>
@@ -295,9 +295,7 @@
 <script>
 import setNavPills from "@/assets/js/nav-pills.js";
 import setTooltip from "@/assets/js/tooltip.js";
-import ProfileCard from "./components/ProfileCard.vue";
 import ArgonInput from "@/components/ArgonInput.vue";
-import ArgonButton from "@/components/ArgonButton.vue";
 
 const body = document.getElementsByTagName("body")[0];
 
@@ -305,10 +303,10 @@ export default {
   name: "profile",
   data() {
     return {
-      showMenu: false
+      showMenu: false,
     };
   },
-  components: { ProfileCard, ArgonInput, ArgonButton },
+  components: { ArgonInput },
 
   mounted() {
     this.$store.state.isAbsolute = true;
@@ -329,6 +327,6 @@ export default {
     this.$store.state.showFooter = true;
     this.$store.state.hideConfigButton = false;
     body.classList.remove("profile-overview");
-  }
+  },
 };
 </script>

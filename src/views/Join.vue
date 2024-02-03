@@ -46,13 +46,6 @@
         </div>
         <div class="text-center mt-4">
           <button type="submit" class="btn btn-primary mx-1">Join</button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            @click="openTelegramBot"
-          >
-            Enable Notification
-          </button>
         </div>
       </form>
     </div>

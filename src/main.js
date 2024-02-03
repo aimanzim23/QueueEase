@@ -16,6 +16,7 @@ import {
   setPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -37,6 +38,34 @@ setPersistence(auth, browserSessionPersistence)
   })
   .catch((error) => {
     console.error("Persistence error:", error);
+  });
+
+// Get registration token. Initially this makes a network call, once retrieved
+// subsequent calls to getToken will return from cache.
+const messaging = getMessaging();
+
+onMessage(messaging, (payload) => {
+  console.log("Message received. ", payload);
+  // ...
+});
+getToken(messaging, {
+  vapidKey:
+    "BO08Y1tFXwbFlaTRY874_v25c2m4cDuC80M4tEgrwHmBDxg4ohe0QqGHM1Ijlp5sRIpfvb9RDs_l1WMlK2UD0rs",
+})
+  .then((currentToken) => {
+    if (currentToken) {
+      console.log("currentToken:", currentToken);
+    } else {
+      // Show permission request UI
+      console.log(
+        "No registration token available. Request permission to generate one."
+      );
+      // ...
+    }
+  })
+  .catch((err) => {
+    console.log("An error occurred while retrieving token. ", err);
+    // ...
   });
 
 const appInstance = createApp(App);
@@ -74,6 +103,17 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 });
+
+if (navigator.serviceWorker) {
+  navigator.serviceWorker
+    .register("/firebase-messaging-sw.js")
+    .then(function (registration) {
+      console.log("Service Worker registered with scope:", registration.scope);
+    })
+    .catch(function (error) {
+      console.error("Error registering Service Worker:", error);
+    });
+}
 
 // Check the initial authentication state
 const unsubscribe = auth.onAuthStateChanged((user) => {

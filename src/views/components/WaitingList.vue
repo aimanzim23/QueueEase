@@ -62,7 +62,7 @@
             v-for="pageNumber in pagination.totalPages"
             :key="pageNumber"
             :class="{ active: pageNumber === pagination.currentPage }"
-            @click="goToPage(pageNumber)"
+            @click.prevent="goToPage(pageNumber)"
           >
             <a class="page-link" href="#">{{ pageNumber }}</a>
           </li>

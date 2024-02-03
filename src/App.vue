@@ -31,6 +31,7 @@
         this.$store.state.showConfig ? 'show' : '',
         this.$store.state.hideConfigButton ? 'd-none' : '',
       ]"
+      v-if="shouldShowConfigurator"
     />
   </main>
 </template>
@@ -63,6 +64,19 @@ export default {
           .isAbsolute,
         "px-0 mx-4": !this.$store.state.isAbsolute,
       };
+    },
+    shouldShowConfigurator() {
+      const isJoinRoute =
+        this.$route.name === "Join Queue" &&
+        this.$route.params.userId &&
+        this.$route.params.queueId;
+      const isQueueTicketRoute =
+        this.$route.name === "QueueTicket" &&
+        this.$route.params.userId &&
+        this.$route.params.queueId;
+
+      // Show the navbar if the route is not "Join Queue" or "QueueTicket" with parameters
+      return !(isJoinRoute || isQueueTicketRoute);
     },
   },
   beforeMount() {

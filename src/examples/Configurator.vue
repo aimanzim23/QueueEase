@@ -42,20 +42,30 @@
             >Preference</a
           >
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a
             class="nav-link"
             :class="{ active: activeTab === 'tab3' }"
             @click="setActiveTab('tab3')"
             >Tab 3</a
           >
-        </li>
+        </li> -->
       </ul>
 
       <!-- Content for small tabs -->
       <div class="tab-content">
         <div v-show="activeTab === 'tab1'">
           <service-modal />
+          <div class="text-center">
+            <button
+              type="button"
+              class="btn btn-danger btn-md"
+              style="margin-left: 10px"
+              @click="endQueuesForToday"
+            >
+              End Session
+            </button>
+          </div>
         </div>
         <div v-show="activeTab === 'tab2'">
           <div class="pt-0 card-body pt-sm-3">
@@ -187,6 +197,13 @@ export default {
   },
   props: ["toggle"],
   methods: {
+    async endQueuesForToday() {
+      try {
+        await this.$store.dispatch("endQueuesForToday");
+      } catch (error) {
+        console.error("Error ending queues for today in component:", error);
+      }
+    },
     setActiveTab(tab) {
       this.activeTab = tab;
     },

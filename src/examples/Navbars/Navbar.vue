@@ -21,7 +21,7 @@
           :class="this.$store.state.isRTL ? 'me-md-auto' : 'ms-md-auto'"
         ></div>
 
-        <ul class="navbar-nav justify-content-end">
+        <ul v-if="shouldShowNavbar" class="navbar-nav justify-content-end">
           <li v-if="user" class="nav-item d-flex align-items-center">
             <span class="text-white">Logged in as {{ userEmail }}</span>
           </li>
@@ -238,6 +238,19 @@ export default {
   computed: {
     currentRouteName() {
       return this.$route.name;
+    },
+    shouldShowNavbar() {
+      const isJoinRoute =
+        this.$route.name === "Join Queue" &&
+        this.$route.params.userId &&
+        this.$route.params.queueId;
+      const isQueueTicketRoute =
+        this.$route.name === "QueueTicket" &&
+        this.$route.params.userId &&
+        this.$route.params.queueId;
+
+      // Show the navbar if the route is not "Join Queue" or "QueueTicket" with parameters
+      return !(isJoinRoute || isQueueTicketRoute);
     },
   },
 };
