@@ -1,6 +1,6 @@
 <template>
   <div class="card p-4" style="width: 600px; height: 600px">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex flex-column align-items-center">
       <!-- Center Section -->
       <div style="text-align: center; margin-top: 20px">
         <button
@@ -8,15 +8,36 @@
           class="btn btn-primary btn-lg mx-2"
           style="background-color: primary"
           @click="createQueue"
+          :disabled="loading"
         >
-          Create Queue Link
+          Create QR Code
         </button>
       </div>
 
-      <!-- Right Section -->
-      <div class="card-icons">
-        <i class="fas fa-copy" @click="copyLink" style="margin-right: 10px"></i>
-        <i class="fas fa-print" @click="printLink"></i>
+      <!-- QR Code Section -->
+      <div class="card-icons" v-if="showQRCode">
+        <div v-if="qrCodeLoading" class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        <div v-else>
+          <button class="btn btn-secondary mx-2" @click="copyLink">
+            <i class="fas fa-copy"></i> Copy Link
+          </button>
+          <button class="btn btn-secondary mx-2" @click="printLink">
+            <i class="fas fa-print"></i> Print
+          </button>
+
+          <!-- Display QR code if available -->
+          <qr-code
+            :text="qrCodeData"
+            :size="qrCodeSize"
+            color="#000"
+            bg-color="#FFF"
+            error-level="H"
+          ></qr-code>
+        </div>
       </div>
     </div>
   </div>
@@ -25,42 +46,90 @@
 <script>
 import { v4 as uuidv4 } from "uuid";
 import { auth } from "@/main";
+
 export default {
-  name: "QR Code",
+  name: "QRCode",
+  data() {
+    return {
+      showQRCode: false,
+      qrCodeData: "",
+      qrCodeSize: 400,
+      loading: false,
+      qrCodeLoading: false,
+    };
+  },
   methods: {
     async createQueue() {
       try {
+        this.loading = true; // Set loading to true when the button is clicked
+
         const user = auth.currentUser;
 
         if (user) {
-          // Generate a unique ID for the queue
           const queueId = uuidv4();
-
-          // Associate the queueId with the current user
           const userData = {
             userId: user.uid,
             queueId: queueId,
           };
 
-          // Dispatch Vuex action to store user data
           await this.$store.dispatch("saveUserData", userData);
 
-          // Create the join link with userId and queueId as parameters
-          const joinLink = `http://localhost:8080/join/${user.uid}/${queueId}`;
-          console.log("Join Link:", joinLink);
+          // Simulate a delay for the QR code loading
+          this.qrCodeLoading = true;
+          setTimeout(() => {
+            const joinLink = `http://localhost:8080/join/${user.uid}/${queueId}`;
+            console.log("Join Link:", joinLink);
 
-          // Now you can store the queueId in your Vuex store or Firebase
-          // For testing purposes, you can log the join link or display it in your UI.
-
-          // Optionally, you can perform additional actions here, such as creating the queue in Firestore.
+            this.qrCodeData = joinLink;
+            this.showQRCode = true;
+            this.qrCodeLoading = false;
+          }, 1000);
         } else {
           console.error("User not authenticated.");
         }
       } catch (error) {
         console.error("Error creating queue:", error);
-        // Handle errors here
+      } finally {
+        // Set loading to false after 1 second
+        setTimeout(() => {
+          this.loading = false;
+        }, 1000);
       }
+    },
+    copyLink() {
+      try {
+        navigator.clipboard
+          .writeText(this.qrCodeData)
+          .then(() => {
+            alert("Link copied to clipboard!");
+          })
+          .catch((error) => {
+            console.error("Error copying link:", error);
+            alert("Error copying link. Please try again.");
+          });
+      } catch (error) {
+        console.error("Clipboard API not supported:", error);
+        // Fallback for browsers that do not support the Clipboard API
+        const tempInput = document.createElement("textarea");
+        tempInput.value = this.qrCodeData;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        alert("Link copied to clipboard!");
+      }
+    },
+
+    printLink() {
+      // Implement print link logic if needed
     },
   },
 };
 </script>
+
+<style scoped>
+.qr-code-container {
+  text-align: center;
+  margin-top: 20px;
+}
+</style>

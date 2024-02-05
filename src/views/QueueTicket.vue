@@ -162,49 +162,20 @@
     </div>
     <!-- Tab Content -->
     <div v-show="activeTab === 'announcement'">
-      <div class="card">
-        <div class="mb-4 mt-4 card">
+      <div class="card p-3 m-3" style="max-height: 600px; overflow-y: auto">
+        <div
+          v-for="(announcement, index) in postedAnnouncements"
+          :key="index"
+          class="mb-4 card"
+        >
           <div class="p-3 card-body">
             <div class="d-flex">
               <div>
                 <div class="numbers">
                   <p class="mb-0 text-sm text-uppercase font-weight-bold">
-                    Important Notice
+                    {{ announcement.title }}
                   </p>
-                  <h5 class="font-weight-bolder">
-                    Operation Hours: 1pm - 10pm
-                  </h5>
-                  <span class="text-sm">{{ currentTime }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="mb-4 card">
-          <div class="p-3 card-body">
-            <div class="d-flex">
-              <div>
-                <div class="numbers">
-                  <p class="mb-0 text-sm text-uppercase font-weight-bold">
-                    Promotion
-                  </p>
-                  <h5 class="font-weight-bolder">50% Off each haircut</h5>
-                  <span class="text-sm">{{ currentTime }} </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="mb-4 card">
-          <div class="p-3 card-body">
-            <div class="d-flex">
-              <div>
-                <div class="numbers">
-                  <p class="mb-0 text-sm text-uppercase font-weight-bold">-</p>
-                  <h5 class="font-weight-bolder">
-                    Lunch break at 1pm. We will operate back in 1 hour!
-                  </h5>
-                  <span class="text-sm">6:20pm </span>
+                  <h5 class="font-weight-bolder">{{ announcement.content }}</h5>
                 </div>
               </div>
             </div>
@@ -217,9 +188,8 @@
 
 <script>
 import { db } from "@/main";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, getDocs } from "firebase/firestore";
 import LiveQueueCard from "./components/LiveQueueCard.vue";
-import admin from "../../admin";
 
 export default {
   name: "QueueTicket",
@@ -234,6 +204,7 @@ export default {
       isDataLoaded: false,
       liveQueues: [],
       isLiveQueuesLoaded: false,
+      postedAnnouncements: [],
     };
   },
   computed: {
@@ -266,30 +237,35 @@ export default {
     },
   },
   methods: {
-    testNoti() {
-      // Replace with your actual token for testing
-      const registrationToken =
-        "dmwxwKquN70eFuMiTAI7DA:APA91bFQalUlyuqjxccDkW-ju7VwoFLBDRN66IDZoaINr3L_CHHoskU6ngM63JQiCKQ5ZXgOXxmHmZbOV_Z6iVO5SBikaKAIzJZOJK2R07z8ap_UR1-NMb0gg3aqi4g3zY0ZVB5Irbsv";
+    async fetchAnnouncements() {
+      try {
+        // Extract userId from the URL parameter
+        const userId = this.$route.params.userId;
 
-      const message = {
-        notification: {
-          title: "Test Notification",
-          body: "This is a test notification!",
-        },
-        token: registrationToken,
-      };
+        // Construct the announcements collection reference
+        const announcementsCollectionRef = collection(
+          db,
+          "users",
+          userId, // Use the extracted userId here
+          "announcements"
+        );
 
-      // Use the admin SDK to send notifications
-      admin
-        .messaging()
-        .send(message)
-        .then((response) => {
-          console.log("Successfully sent message:", response);
-        })
-        .catch((error) => {
-          console.log("Error sending message:", error);
+        // Fetch documents from Firestore
+        const querySnapshot = await getDocs(announcementsCollectionRef);
+
+        // Update the postedAnnouncements array
+        this.postedAnnouncements = querySnapshot.docs.map((doc) => {
+          const announcementData = doc.data();
+          return {
+            id: doc.id,
+            ...announcementData,
+          };
         });
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+      }
     },
+
     async fetchQueueData() {
       try {
         const userId = this.$route.params.userId;
@@ -387,6 +363,8 @@ export default {
   mounted() {
     // Fetch queues automatically when the component is mounted
     this.fetchQueueData();
+
+    this.fetchAnnouncements();
   },
 };
 </script>

@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "./assets/css/nucleo-icons.css";
 import "./assets/css/nucleo-svg.css";
 import ArgonDashboard from "./argon-dashboard";
+import VueQRCodeComponent from "vue-qrcode-component";
 //firebase
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -74,6 +75,7 @@ appInstance.use(router);
 appInstance.use(ArgonDashboard);
 library.add(fas);
 appInstance.component("fa", FontAwesomeIcon);
+appInstance.component("qr-code", VueQRCodeComponent);
 
 // Attach a global navigation guard
 router.beforeEach(async (to, from, next) => {

@@ -204,6 +204,18 @@ export default {
     goToPage(pageNumber) {
       this.pagination.currentPage = pageNumber;
     },
+    formatServiceTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
+
+      return `${hours
+        .toString()
+        .padStart(2, "0")}h ${minutes
+        .toString()
+        .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
+    },
     formattedArrivalTime(date) {
       const formatted = new Date(date).toLocaleTimeString("en-US", {
         hour: "numeric",
@@ -229,13 +241,12 @@ export default {
 
           // Calculate the service time in milliseconds
           const serviceTime = completedTimestamp - queueData.startTime;
-          const formattedServiceTime = this.formatServiceTime(serviceTime);
 
-          // Update the queue status to 'Completed' and store the service time
+          // Update the queue status to 'Completed' and store the service time as a number
           await updateDoc(queueDocRef, {
             status: "Completed",
             completedTime: completedTimestamp, // Add a field to store the completion time
-            serviceTime: formattedServiceTime, // Store the service time
+            serviceTime: serviceTime, // Store the service time as a number
           });
 
           console.log(

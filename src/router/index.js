@@ -10,6 +10,7 @@ import ControlQueue from "../views/ControlQueue.vue";
 import Join from "../views/Join.vue";
 import QueueTicket from "../views/QueueTicket.vue";
 import LiveQueue from "../views/LiveQueue.vue";
+import announcement from "../views/Announcement.vue";
 
 const routes = [
   {
@@ -71,6 +72,14 @@ const routes = [
     path: "/qr",
     name: "QR Code",
     component: QR,
+    meta: {
+      authRequired: true,
+    },
+  },
+  {
+    path: "/announcement",
+    name: "Announcement",
+    component: announcement,
     meta: {
       authRequired: true,
     },

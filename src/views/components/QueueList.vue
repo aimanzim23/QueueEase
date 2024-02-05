@@ -31,7 +31,7 @@
       <div class="col-lg-3 col-md-6 col-12">
         <card
           title="Avg Waiting Time"
-          value="10 min"
+          :value="formattedAverageServiceTime"
           iconClass="fas fa-hourglass-half"
           iconBackground="bg-gradient-warning"
           directionReverse
@@ -152,6 +152,7 @@ import {
   getDocs,
   doc,
   query,
+  where,
 } from "firebase/firestore";
 import { db, auth } from "@/main";
 import QueueModal from "./QueueModal.vue";
@@ -179,6 +180,8 @@ export default {
       },
       selectedService: null, // To store the selected service ID
       availableServices: [],
+      formattedAverageServiceTime: "N/A",
+      unsubscribeAverageServiceTime: null,
     };
   },
   methods: {
@@ -285,6 +288,93 @@ export default {
         .toString()
         .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
     },
+    async calculateAverageServiceTime() {
+      const user = auth.currentUser;
+
+      if (user) {
+        const userId = user.uid;
+        const userDocRef = doc(db, "users", userId);
+        const queuesCollectionRef = collection(userDocRef, "queues");
+
+        try {
+          // Query all completed queues
+          const completedQueuesQuery = query(
+            queuesCollectionRef,
+            where("status", "==", "Completed")
+          );
+
+          // Listen for real-time updates using onSnapshot
+          const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
+            let totalServiceTime = 0;
+            let numberOfCompletedQueues = 0;
+
+            // Iterate through completed queues
+            snapshot.forEach((queueDoc) => {
+              const queueData = queueDoc.data();
+
+              // Ensure the queue has a valid numeric service time
+              if (
+                typeof queueData.serviceTime === "number" &&
+                !isNaN(queueData.serviceTime)
+              ) {
+                // Accumulate the total service time and increment the count
+                totalServiceTime += queueData.serviceTime;
+                numberOfCompletedQueues++;
+              }
+            });
+
+            // Calculate average service time
+            const averageServiceTime =
+              numberOfCompletedQueues > 0
+                ? totalServiceTime / numberOfCompletedQueues
+                : 0;
+
+            console.log(
+              "Total service time of completed queues (numeric):",
+              totalServiceTime
+            );
+
+            // Log the total service time in a formatted manner
+            const formattedTotalServiceTime = this.formatServiceTime(
+              totalServiceTime
+            );
+            console.log(
+              "Total service time of completed queues (formatted):",
+              formattedTotalServiceTime
+            );
+
+            console.log("Number of Completed Queues:", numberOfCompletedQueues);
+            console.log(
+              "Average service time of completed queues:",
+              averageServiceTime
+            );
+
+            // Update the formattedAverageServiceTime property
+            this.formattedAverageServiceTime = isNaN(averageServiceTime)
+              ? "N/A"
+              : this.formatServiceTime(averageServiceTime);
+
+            console.log(
+              "Formatted Average Service Time:",
+              this.formattedAverageServiceTime
+            );
+          });
+
+          // Save the unsubscribe function in a component data property to be used later
+          this.unsubscribeAverageServiceTime = unsubscribe;
+        } catch (error) {
+          console.error("Error calculating average service time:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+    beforeDestroy() {
+      if (this.unsubscribeAverageServiceTime) {
+        this.unsubscribeAverageServiceTime();
+      }
+    },
+
     async ongoingQueue(id) {
       const user = auth.currentUser;
       if (user) {
@@ -329,13 +419,12 @@ export default {
 
           // Calculate the service time in milliseconds
           const serviceTime = completedTimestamp - queueData.startTime;
-          const formattedServiceTime = this.formatServiceTime(serviceTime);
 
-          // Update the queue status to 'Completed' and store the service time
+          // Update the queue status to 'Completed' and store the service time as a number
           await updateDoc(queueDocRef, {
             status: "Completed",
             completedTime: completedTimestamp, // Add a field to store the completion time
-            serviceTime: formattedServiceTime, // Store the service time
+            serviceTime: serviceTime, // Store the service time as a number
           });
 
           console.log(
@@ -379,6 +468,9 @@ export default {
         console.error("User not authenticated.");
       }
     },
+  },
+  created() {
+    this.calculateAverageServiceTime();
   },
 
   mounted() {
