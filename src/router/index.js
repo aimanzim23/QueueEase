@@ -11,6 +11,7 @@ import Join from "../views/Join.vue";
 import QueueTicket from "../views/QueueTicket.vue";
 import LiveQueue from "../views/LiveQueue.vue";
 import announcement from "../views/Announcement.vue";
+import LiveQueueMain from "../views/LiveQueueMain.vue";
 
 const routes = [
   {
@@ -48,6 +49,14 @@ const routes = [
     path: "/dashboard-default",
     name: "Dashboard",
     component: Dashboard,
+    meta: {
+      authRequired: true,
+    },
+  },
+  {
+    path: "/live-queue-main",
+    name: "Live Queue Main",
+    component: LiveQueueMain,
     meta: {
       authRequired: true,
     },

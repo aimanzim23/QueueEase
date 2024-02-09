@@ -40,63 +40,86 @@
           </tr>
         </thead>
         <tbody class="text-center">
-          <tr v-for="(queue, index) in paginatedQueues" :key="index">
-            <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
-            <td>
-              <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
-              <p class="text-xs text-secondary mb-0">
-                {{ queue.phoneNumber }}
-              </p>
-            </td>
+          <template v-if="paginatedQueues.length > 0">
+            <tr v-for="(queue, index) in filteredPaginatedQueues" :key="index">
+              <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
+              <td>
+                <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
+                <p class="text-xs text-secondary mb-0">
+                  {{ queue.phoneNumber }}
+                </p>
+              </td>
 
-            <td class="mb-0 text-sm">{{ queue.service }}</td>
-            <td class="mb-0 text-sm">
-              {{ formattedArrivalTime(queue.date) }}
-            </td>
-            <td class="mb-0 text-sm">
-              <span
-                v-if="queue.status === 'Ongoing'"
-                class="badge text-bg-primary"
-                >Ongoing
-              </span>
-              <span
-                v-else-if="queue.status === 'Waiting'"
-                class="badge text-bg-secondary"
-                >Waiting</span
-              >
-              <span
-                v-else-if="queue.status === 'Completed'"
-                class="badge text-bg-success"
-                >Completed</span
-              >
-            </td>
-            <td>
-              <div class="circular-buttons-container">
-                <button
-                  class="circular-button tick-button"
-                  @click="completeQueue(queue.id)"
-                  :disabled="queue.status === 'Completed'"
-                  :class="{ 'disabled-button': queue.status === 'Completed' }"
+              <td class="mb-0 text-sm">{{ queue.service }}</td>
+              <td class="mb-0 text-sm">
+                {{ formattedArrivalTime(queue.date) }}
+              </td>
+              <td class="mb-0 text-sm">
+                <span
+                  v-if="queue.status === 'Ongoing'"
+                  class="badge text-bg-primary"
+                  >Ongoing
+                </span>
+                <span
+                  v-else-if="queue.status === 'Waiting'"
+                  class="badge text-bg-secondary"
+                  >Waiting</span
                 >
-                  <i class="fas fa-check"></i>
-                </button>
-                <button
-                  class="circular-button call-button"
-                  @click="ongoingQueue(queue.id)"
-                  :disabled="queue.status === 'Completed'"
-                  :title="queue.status === 'Completed' ? 'Disabled' : ''"
+                <span
+                  v-else-if="queue.status === 'Completed'"
+                  class="badge text-bg-success"
+                  >Completed</span
                 >
-                  <i class="fas fa-phone-alt"></i>
-                </button>
-                <button
-                  class="circular-button trash-button"
-                  @click="deleteQueue(queue.id)"
+                <span
+                  v-else-if="queue.status === 'Cancelled'"
+                  class="badge text-bg-danger"
+                  >Cancelled</span
                 >
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
+                <span
+                  v-else-if="queue.status === 'No Show'"
+                  class="badge text-bg-warning"
+                  >No Show</span
+                >
+              </td>
+              <td>
+                <div class="circular-buttons-container">
+                  <button
+                    class="circular-button tick-button"
+                    @click="completeQueue(queue.id)"
+                    :disabled="
+                      queue.status === 'Completed' || queue.status === 'Waiting'
+                    "
+                    :class="{
+                      'disabled-button':
+                        queue.status === 'Completed' ||
+                        queue.status === 'Waiting',
+                    }"
+                  >
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button
+                    class="circular-button call-button"
+                    @click="ongoingQueue(queue.id, queue.service)"
+                    :disabled="isOngoingDisabled(queue.service)"
+                    :title="isOngoingDisabled(queue.service) ? 'Disabled' : ''"
+                  >
+                    <i class="fas fa-phone-alt"></i>
+                  </button>
+                  <button
+                    class="circular-button trash-button"
+                    @click="deleteQueue(queue.id)"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr>
+              <td colspan="6" class="text-center">No current queues.</td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -155,6 +178,10 @@ export default {
       type: Array,
       required: true,
     },
+    selectedService: {
+      type: String,
+      required: true,
+    },
     // Add other props as needed
   },
   data() {
@@ -174,6 +201,14 @@ export default {
       const end = start + this.pagination.perPage;
       return this.queues.slice(start, end);
     },
+    // Calculate paginated queues based on current page and selected service
+    filteredPaginatedQueues() {
+      // Filter the paginated queues based on the selected service
+      return this.paginatedQueues.filter(
+        (queue) =>
+          !this.selectedService || queue.service === this.selectedService
+      );
+    },
   },
   watch: {
     queues() {
@@ -184,6 +219,12 @@ export default {
     },
   },
   methods: {
+    isOngoingDisabled(service) {
+      // Check if there is an ongoing queue for the current service
+      return this.paginatedQueues.some(
+        (q) => q.service === service && q.status === "Ongoing"
+      );
+    },
     updateTotalPages() {
       this.pagination.totalPages = Math.ceil(
         this.queues.length / this.pagination.perPage
@@ -264,25 +305,42 @@ export default {
     },
     async ongoingQueue(id) {
       const user = auth.currentUser;
+
       if (user) {
         const userId = user.uid;
         const userDocRef = doc(db, "users", userId);
         const queueDocRef = doc(userDocRef, "queues", id);
 
         try {
-          const startTimestamp = Date.now(); // Store the start time
+          // Fetch the queue data before updating
+          const queueDocSnapshot = await getDoc(queueDocRef);
+          const queueData = queueDocSnapshot.data();
 
-          // Update the queue status to 'Ongoing'
-          await updateDoc(queueDocRef, {
-            status: "Ongoing",
-            startTime: startTimestamp, // Add a field to store the start time
-          });
+          // Check if the queue was in a waiting state before becoming ongoing
+          if (
+            queueData.status === "Waiting" ||
+            queueData.status === "No Show"
+          ) {
+            // Calculate waiting time by subtracting the queue's date from the current time
+            const waitingTime = Date.now() - queueData.date;
 
-          console.log("Queue set to Ongoing status.");
-          this.startTimer();
-          this.isOngoingQueueForService = false;
-          // Return the startTimestamp to use for calculating service time in completeQueue
-          return startTimestamp;
+            // Update the queue status to 'Ongoing' and store the start time and waiting time
+            await updateDoc(queueDocRef, {
+              status: "Ongoing",
+              startTime: Date.now(), // Add a field to store the start time
+              waitingTime: waitingTime, // Add a field to store the waiting time
+            });
+
+            console.log("Queue set to Ongoing status.");
+            console.log("Waiting Time:", waitingTime);
+            this.startTimer();
+            this.isOngoingQueueForService = false;
+
+            // Return the startTimestamp to use for calculating service time in completeQueue
+            return Date.now();
+          } else {
+            console.log("Queue is not in a waiting state.");
+          }
         } catch (error) {
           console.error("Error setting queue to Ongoing:", error);
         }
@@ -331,6 +389,12 @@ export default {
 
 .text-bg-success {
   background-color: #28a745; /* Set your success color */
+}
+.text-bg-danger {
+  background-color: #dc3545; /* Set your danger color */
+}
+.text-bg-warning {
+  background-color: #f16131; /* Set your warning color */
 }
 .circular-buttons-container {
   display: flex;

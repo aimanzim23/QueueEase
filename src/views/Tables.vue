@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card p-4 m-4">
     <div
       class="card-header pb-0 d-flex justify-content-between align-items-center"
     >
@@ -31,12 +31,13 @@
               >
                 Cancelled Visits
               </th>
+              <th></th>
             </tr>
           </thead>
           <tbody class="text-center">
             <tr v-for="(queue, index) in formattedArchivedQueues" :key="index">
               <td class="text-center text-secondary text-xs font-weight-bold">
-                {{ queue.date }}
+                {{ formatDate(queue.date) }}
               </td>
               <td class="text-center text-secondary text-xs font-weight-bold">
                 {{ getDayOfWeek(queue.date) }}
@@ -47,9 +48,105 @@
               <td class="text-center text-secondary text-xs font-weight-bold">
                 {{ queue.cancelledVisits }}
               </td>
+              <td>
+                <div @click="toggleCollapse(index)" class="icon-container">
+                  <i
+                    class="fas"
+                    :class="
+                      isExpanded(index)
+                        ? 'fa-chevron-up fa-xs'
+                        : 'fa-chevron-down fa-xs'
+                    "
+                  ></i>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <div
+        v-for="(queue, index) in formattedArchivedQueues"
+        :key="'expand-' + index"
+      >
+        <div v-if="isExpanded(index)">
+          <div class="table-responsive p-0">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    # & Service
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Name
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Service Time
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Time
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Status
+                  </th>
+                  <!-- Add more columns if needed -->
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(queueItem, itemIndex) in queue.queues"
+                  :key="'sub-' + itemIndex"
+                >
+                  <td>
+                    <h6 class="text-center mb-0 text-xs">
+                      {{ queueItem.queueNo }}
+                    </h6>
+                    <p
+                      class="text-center text-secondary text-xs font-weight-bold"
+                    >
+                      {{ queueItem.service }}
+                    </p>
+                  </td>
+                  <td>
+                    <h6 class="text-center mb-0 text-xs">
+                      {{ queueItem.userName }}
+                    </h6>
+                    <p
+                      class="text-center text-secondary text-xs font-weight-bold"
+                    >
+                      {{ queueItem.phoneNumber }}
+                    </p>
+                  </td>
+                  <td
+                    class="text-center text-secondary text-xs font-weight-bold"
+                  >
+                    {{ formatServiceTime(queueItem.serviceTime) }}
+                  </td>
+                  <td
+                    class="text-center text-secondary text-xs font-weight-bold"
+                  >
+                    {{ formatTime(queueItem.date) }}
+                  </td>
+                  <td
+                    class="text-center text-secondary text-xs font-weight-bold"
+                  >
+                    {{ queueItem.status }}
+                  </td>
+                  <!-- Add more columns if needed -->
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -57,6 +154,11 @@
 
 <script>
 export default {
+  data() {
+    return {
+      expandedIndex: null,
+    };
+  },
   computed: {
     formattedArchivedQueues() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
@@ -71,31 +173,63 @@ export default {
       const groupedQueues = allQueues.reduce((acc, queue) => {
         const dateKey = new Date(queue.date).toLocaleDateString();
         if (!acc[dateKey]) {
-          acc[dateKey] = [];
+          acc[dateKey] = {
+            date: new Date(dateKey).toLocaleString(),
+            queues: [],
+            totalServiceTime: 0,
+            cancelledVisits: 0,
+          };
         }
-        acc[dateKey].push(queue);
+        acc[dateKey].queues.push(queue);
+        if (queue.status === "Completed") {
+          acc[dateKey].totalServiceTime += queue.serviceTime || 0;
+        } else if (queue.status === "Cancelled") {
+          acc[dateKey].cancelledVisits += 1;
+        }
         return acc;
       }, {});
 
-      // Calculate totals for each date
-      const result = Object.entries(groupedQueues).map(([date, queues]) => {
-        return {
-          date: new Date(date).toLocaleString(),
-          totalServiceTime: this.calculateTotalServiceTime(queues),
-          cancelledVisits: this.countCancelledVisits(queues),
-        };
-      });
-
-      return result;
+      return Object.values(groupedQueues);
     },
   },
   methods: {
+    formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString(); // Adjust the formatting as needed
+    },
+    formatServiceTime(serviceTime) {
+      if (serviceTime === null || isNaN(serviceTime)) {
+        return "-";
+      }
+      const seconds = Math.floor(serviceTime / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+
+      const formattedTime = `${String(hours).padStart(2, "0")}h ${String(
+        minutes % 60
+      ).padStart(2, "0")}m ${String(seconds % 60).padStart(2, "0")}s`;
+
+      return formattedTime;
+    },
     formatDate(timestamp) {
       const date = new Date(timestamp);
-      return date.toLocaleString(); // Adjust the formatting as needed
+      // Get the date components
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-based
+      const year = date.getFullYear();
+
+      return `${day}/${month}/${year}`;
     },
     getDayOfWeek(timestamp) {
-      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const daysOfWeek = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
       const date = new Date(timestamp);
       const dayIndex = date.getDay();
       return daysOfWeek[dayIndex];
@@ -124,6 +258,14 @@ export default {
         0
       );
     },
+    toggleCollapse(index) {
+      // Toggle collapse for the selected index
+      this.expandedIndex = this.expandedIndex === index ? null : index;
+    },
+    isExpanded(index) {
+      // Check if the table is expanded for a specific index
+      return this.expandedIndex === index;
+    },
   },
   async created() {
     try {
@@ -137,3 +279,15 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.icon-container {
+  cursor: pointer;
+  font-size: 1.5rem; /* Adjust the size as needed */
+  color: grey; /* Set the default color */
+}
+
+.icon-container:hover {
+  color: grey; /* Set the hover color */
+}
+</style>

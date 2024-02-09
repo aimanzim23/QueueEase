@@ -6,10 +6,10 @@ import {
   orderBy,
   onSnapshot,
   getDoc,
-  setDoc,
   getDocs,
   deleteDoc,
   updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/main";
 
@@ -46,9 +46,10 @@ const mutations = {
 };
 
 const actions = {
-  async endQueuesForToday({ state, commit }) {
+  async endQueuesForToday({ commit }) {
     try {
       const user = auth.currentUser;
+
       if (user) {
         const userId = user.uid;
 
@@ -61,32 +62,46 @@ const actions = {
         // Create a single document with a fixed ID for all queues
         const archiveDocumentRef = doc(archivesCollectionRef, "allQueues");
 
-        // Get existing queues data from the document
-        const existingQueues =
-          (await getDoc(archiveDocumentRef)).data()?.queues || [];
-
-        // Combine existing queues with the current queues
-        const updatedQueues = [...existingQueues, ...state.queues];
-
-        // Update the document with the combined queues
-        await setDoc(archiveDocumentRef, { queues: updatedQueues });
-
-        // Delete/reset the existing queues
+        // Get all documents from the "queues" collection
         const queuesCollectionRef = collection(userDocRef, "queues");
-
-        // Get all documents from the existing collection
         const queueDocs = await getDocs(queuesCollectionRef);
 
-        // Delete each document individually
-        queueDocs.forEach(async (doc) => {
+        // Prepare an array to store all queues
+        const allQueues = [];
+
+        // Iterate through each document in "queues" collection using for...of
+        for (const doc of queueDocs.docs) {
+          const queueData = doc.data();
+
+          // Change the status to "Cancelled" for queues with status "Waiting"
+          if (
+            queueData.status === "Waiting" ||
+            queueData.status === "No Show"
+          ) {
+            queueData.status = "Cancelled";
+          }
+
+          // Add the queue to the "allQueues" document
+          await setDoc(
+            archiveDocumentRef,
+            { [doc.id]: queueData },
+            { merge: true }
+          );
+
+          // Store the queue data in the array for further processing if needed
+          allQueues.push(queueData);
+
+          // Delete the document from the "queues" collection
           await deleteDoc(doc.ref);
-        });
+        }
 
         // Update Vuex store
         commit("setQueues", []);
 
         // Clear local storage
         localStorage.removeItem("queueData");
+
+        console.log("All Queues for Today:", allQueues);
 
         // ... other logic if needed
       } else {
@@ -97,6 +112,7 @@ const actions = {
       // Handle error
     }
   },
+
   async addQueue({ commit }, queueData) {
     try {
       const user = auth.currentUser;
@@ -163,27 +179,27 @@ const actions = {
   async fetchArchivedQueues({ commit }) {
     try {
       const user = auth.currentUser;
+
       if (user) {
         const userId = user.uid;
 
         // Reference to the user's document
         const userDocRef = doc(db, "users", userId);
 
-        // Reference to the "allQueues" document inside the "archives" collection
+        // Reference to the "allQueues" document in the "archives" subcollection
         const archiveDocumentRef = doc(
           collection(userDocRef, "archives"),
           "allQueues"
         );
 
-        // Get existing queues data from the document
-        const archivedQueuesData = (await getDoc(archiveDocumentRef)).data();
+        // Get the data from the "allQueues" document
+        const archiveData = (await getDoc(archiveDocumentRef)).data();
 
-        if (archivedQueuesData) {
-          const archivedQueues = archivedQueuesData.queues || [];
+        // Commit the archived queues to the Vuex store
+        commit("setArchivedQueues", archiveData);
 
-          // Update Vuex store with archived queues
-          commit("setArchivedQueues", archivedQueues);
-        }
+        // Log or handle the data as needed
+        console.log("Archived Queues:", archiveData);
       } else {
         console.error("User not authenticated.");
       }

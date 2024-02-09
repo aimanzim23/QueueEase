@@ -13,6 +13,7 @@
           id="announcementTitle"
           class="form-control"
           v-model="postTitle"
+          placeholder="Subject title.."
         />
       </div>
 
@@ -23,7 +24,7 @@
           class="form-control"
           v-model="postContent"
           rows="3"
-          placeholder="What's on your mind?"
+          placeholder="Post an announcement here..."
         ></textarea>
       </div>
 

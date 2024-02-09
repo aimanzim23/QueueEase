@@ -12,7 +12,7 @@
             :navText="'Dashboard'"
           >
             <template v-slot:icon>
-              <i class="ni ni-tv-2 text-primary text-sm opacity-10"></i>
+              <i class="fas fa-chart-line text-dark text-sm opacity-10"></i>
             </template>
           </sidenav-item>
         </li>
@@ -23,9 +23,18 @@
             :navText="'Monitor Queue'"
           >
             <template v-slot:icon>
-              <i
-                class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
-              ></i>
+              <i class="ni ni-tv-2 text-dark text-sm opacity-10"></i>
+            </template>
+          </sidenav-item>
+        </li>
+        <li class="nav-item">
+          <sidenav-item
+            url="/live-queue-main"
+            :class="getRoute() === 'live-queue-main' ? 'active' : ''"
+            :navText="'Live Queue'"
+          >
+            <template v-slot:icon>
+              <i class="fas fa-users text-dark text-sm opacity-10"></i>
             </template>
           </sidenav-item>
         </li>
@@ -37,7 +46,7 @@
           >
             <template v-slot:icon>
               <i
-                class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
+                class="ni ni-calendar-grid-58 text-dark text-sm opacity-10"
               ></i>
             </template>
           </sidenav-item>
@@ -45,14 +54,19 @@
         <li class="nav-item">
           <sidenav-item url="/qr" navText="QR Code">
             <template v-slot:icon>
-              <i class="ni ni-world-2 text-danger text-sm opacity-10"></i>
+              <i
+                class="fas fa-qrcode text-dark text-sm opacity-10"
+                style="color: black; font-size: 1rem; opacity: 0.5"
+              ></i>
             </template>
           </sidenav-item>
         </li>
         <li class="nav-item">
           <sidenav-item url="/announcement" navText="Announcement">
             <template v-slot:icon>
-              <i class="ni ni-world-2 text-danger text-sm opacity-10"></i>
+              <i
+                class="fab fa-font-awesome-flag text-dark text-sm opacity-10"
+              ></i>
             </template>
           </sidenav-item>
         </li>

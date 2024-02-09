@@ -1,42 +1,44 @@
 <template>
-  <div class="card p-4" style="width: 600px; height: 600px">
-    <div class="d-flex flex-column align-items-center">
-      <!-- Center Section -->
-      <div style="text-align: center; margin-top: 20px">
-        <button
-          type="button"
-          class="btn btn-primary btn-lg mx-2"
-          style="background-color: primary"
-          @click="createQueue"
-          :disabled="loading"
-        >
-          Create QR Code
-        </button>
-      </div>
+  <div>
+    <button
+      type="button"
+      class="btn btn-primary btn-lg mx-2 mt-3"
+      style="background-color: primary"
+      @click="createQueue"
+      :disabled="loading"
+    >
+      Create QR Code
+    </button>
 
-      <!-- QR Code Section -->
-      <div class="card-icons" v-if="showQRCode">
-        <div v-if="qrCodeLoading" class="text-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <div v-if="showQRCode" class="card p-4" style="width: 600px; height: 600px">
+      <div class="d-flex flex-column align-items-center">
+        <!-- Center Section -->
+        <div style="text-align: center; margin-top: 20px">
+          <!-- QR Code Section -->
+          <div class="card-icons">
+            <div v-if="qrCodeLoading" class="text-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <div v-else>
+              <button class="btn btn-secondary mx-2" @click="copyLink">
+                <i class="fas fa-copy"></i> Copy Link
+              </button>
+              <button class="btn btn-secondary mx-2" @click="printLink">
+                <i class="fas fa-print"></i> Print
+              </button>
+
+              <!-- Display QR code if available -->
+              <qr-code
+                :text="qrCodeData"
+                :size="qrCodeSize"
+                color="#000"
+                bg-color="#FFF"
+                error-level="H"
+              ></qr-code>
+            </div>
           </div>
-        </div>
-        <div v-else>
-          <button class="btn btn-secondary mx-2" @click="copyLink">
-            <i class="fas fa-copy"></i> Copy Link
-          </button>
-          <button class="btn btn-secondary mx-2" @click="printLink">
-            <i class="fas fa-print"></i> Print
-          </button>
-
-          <!-- Display QR code if available -->
-          <qr-code
-            :text="qrCodeData"
-            :size="qrCodeSize"
-            color="#000"
-            bg-color="#FFF"
-            error-level="H"
-          ></qr-code>
         </div>
       </div>
     </div>
@@ -53,7 +55,7 @@ export default {
     return {
       showQRCode: false,
       qrCodeData: "",
-      qrCodeSize: 400,
+      qrCodeSize: 350,
       loading: false,
       qrCodeLoading: false,
     };

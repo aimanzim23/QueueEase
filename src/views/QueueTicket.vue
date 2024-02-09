@@ -61,29 +61,35 @@
               <p>
                 Keep an eye on the ticket calls, {{ selectedQueue.userName }}!
               </p>
-              <p>Estimated Waiting Time: {{ "10min" }}</p>
+              <p>Average Waiting Time: {{ averageWaitingTime }}</p>
             </div>
           </div>
         </div>
       </div>
       <div class="text-center mt-4">
+        <!-- Enable Notification Button -->
         <button
           class="btn btn-primary"
           type="button"
           data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasBottom"
-          aria-controls="offcanvasBottom"
+          data-bs-target="#notificationOffcanvas"
+          aria-controls="notificationOffcanvas"
         >
           Enable Notification
         </button>
+
+        <!-- Notification Off-canvas -->
         <div
           class="offcanvas offcanvas-bottom"
           tabindex="-1"
-          id="offcanvasBottom"
-          aria-labelledby="offcanvasBottomLabel"
+          id="notificationOffcanvas"
+          aria-labelledby="notificationOffcanvasLabel"
         >
           <div class="offcanvas-header">
-            <h5 class="offcanvas-title text-dark" id="offcanvasBottomLabel">
+            <h5
+              class="offcanvas-title text-dark"
+              id="notificationOffcanvasLabel"
+            >
               Notification
             </h5>
             <button
@@ -99,8 +105,63 @@
             </div>
           </div>
         </div>
+        <div class="d-inline-block mx-1"></div>
 
-        <button class="btn btn-danger mx-2" type="button">Cancel Queue</button>
+        <!-- Cancel Queue Button -->
+        <button
+          class="btn btn-danger"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#cancelQueueOffcanvas"
+          aria-controls="cancelQueueOffcanvas"
+        >
+          Cancel Queue
+        </button>
+
+        <!-- Cancel Queue Off-canvas -->
+        <div
+          class="offcanvas offcanvas-bottom"
+          tabindex="-1"
+          id="cancelQueueOffcanvas"
+          aria-labelledby="cancelQueueOffcanvasLabel"
+        >
+          <div class="offcanvas-header">
+            <h5
+              class="offcanvas-title text-dark"
+              id="cancelQueueOffcanvasLabel"
+            >
+              Cancel queueing?
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="offcanvas-body">
+            <div class="row">
+              <div class="col-6">
+                <button
+                  class="btn btn-danger"
+                  style="width: 100%"
+                  @click="cancelQueue"
+                >
+                  Yes
+                </button>
+              </div>
+              <div class="col-6">
+                <button
+                  class="btn btn-secondary"
+                  style="width: 100%"
+                  @click="closeCancelConfirmation"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -188,7 +249,15 @@
 
 <script>
 import { db } from "@/main";
-import { collection, onSnapshot, getDocs } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  where,
+} from "firebase/firestore";
 import LiveQueueCard from "./components/LiveQueueCard.vue";
 
 export default {
@@ -205,6 +274,7 @@ export default {
       liveQueues: [],
       isLiveQueuesLoaded: false,
       postedAnnouncements: [],
+      averageWaitingTime: "N/A",
     };
   },
   computed: {
@@ -237,6 +307,43 @@ export default {
     },
   },
   methods: {
+    async cancelQueue() {
+      try {
+        const userId = this.$route.params.userId;
+        const routeQueueId = this.$route.params.queueId;
+
+        // Construct the queues collection reference
+        const queuesCollectionRef = collection(db, "users", userId, "queues");
+
+        // Query for the document that has the specified queueId
+        const querySnapshot = await getDocs(
+          query(queuesCollectionRef, where("queueId", "==", routeQueueId))
+        );
+
+        if (!querySnapshot.empty) {
+          // There should be only one document matching the queueId
+          const queueDoc = querySnapshot.docs[0];
+          const queueDocRef = doc(db, "users", userId, "queues", queueDoc.id);
+
+          // Update the queue status to "Cancelled"
+          await updateDoc(queueDocRef, {
+            status: "Cancelled",
+          });
+
+          console.log("Queue cancelled successfully.");
+
+          // Display an alert to the user
+          window.alert("Queue cancelled successfully!");
+
+          // // Route back to the join page
+          this.$router.push(`/ThankYou`);
+        } else {
+          console.error("No queue found with the specified queueId.");
+        }
+      } catch (error) {
+        console.error("Error cancelling queue:", error);
+      }
+    },
     async fetchAnnouncements() {
       try {
         // Extract userId from the URL parameter
@@ -304,13 +411,91 @@ export default {
           }
 
           // Now, 'selectedQueue' contains the details of the specific queue
-          console.log("Selected Queue:", this.selectedQueue);
+          console.log("Selected Queue:", this.selectedQueue.service);
 
           // Set the flag to indicate that data is loaded
           this.isDataLoaded = true;
         });
       } catch (error) {
         console.error("Error fetching queue data:", error);
+      }
+    },
+    async calculateAverageWaitingTime() {
+      try {
+        // Get user and queue IDs from route params
+        const userId = this.$route.params.userId;
+
+        // Construct the queues collection reference
+        const queuesCollectionRef = collection(db, "users", userId, "queues");
+
+        // Query completed queues based on the selected service
+        let completedQueuesQuery;
+
+        if (this.selectedService) {
+          completedQueuesQuery = query(
+            queuesCollectionRef,
+            where("status", "==", "Completed"),
+            where("service", "==", this.selectedService)
+          );
+        } else {
+          // If no service is selected, query all completed queues
+          completedQueuesQuery = query(
+            queuesCollectionRef,
+            where("status", "==", "Completed")
+          );
+        }
+
+        // Listen for real-time updates using onSnapshot
+        const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
+          let totalWaitingTime = 0;
+          let numberOfCompletedQueues = 0;
+
+          // Iterate through completed queues
+          snapshot.forEach((queueDoc) => {
+            const queueData = queueDoc.data();
+
+            // Ensure the queue has a valid numeric waiting time
+            if (
+              typeof queueData.waitingTime === "number" &&
+              !isNaN(queueData.waitingTime)
+            ) {
+              // Accumulate the total waiting time and increment the count
+              totalWaitingTime += queueData.waitingTime;
+              numberOfCompletedQueues++;
+            }
+          });
+
+          // Calculate average waiting time
+          const averageWaitingTime =
+            numberOfCompletedQueues > 0
+              ? totalWaitingTime / numberOfCompletedQueues
+              : 0;
+
+          console.log(
+            "Total waiting time of completed queues:",
+            totalWaitingTime
+          );
+          console.log("Number of Completed Queues:", numberOfCompletedQueues);
+          console.log(
+            "Average waiting time of completed queues:",
+            averageWaitingTime
+          );
+
+          // Update the averageWaitingTime property
+          this.averageWaitingTime = isNaN(averageWaitingTime)
+            ? "N/A"
+            : this.formatServiceTime(averageWaitingTime);
+
+          console.log(
+            "Formatted Average Waiting Time:",
+            this.averageWaitingTime
+          );
+        });
+
+        // Save the unsubscribe function in a component data property to be used later
+        this.unsubscribeAverageWaitingTime = unsubscribe;
+      } catch (error) {
+        console.error("Error calculating average waiting time:", error);
       }
     },
     async fetchLiveQueues() {
@@ -359,11 +544,30 @@ export default {
         }
       }
     },
-  },
-  mounted() {
-    // Fetch queues automatically when the component is mounted
-    this.fetchQueueData();
+    formatServiceTime(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
 
+      return `${hours
+        .toString()
+        .padStart(2, "0")}h ${minutes
+        .toString()
+        .padStart(2, "0")}m ${remainingSeconds.toString().padStart(2, "0")}s`;
+    },
+  },
+  async created() {
+    try {
+      // Call the method to calculate and update averageWaitingTime
+      await this.calculateAverageWaitingTime();
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  },
+
+  mounted() {
+    this.fetchQueueData();
     this.fetchAnnouncements();
   },
 };
