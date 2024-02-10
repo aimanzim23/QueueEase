@@ -249,8 +249,10 @@ export default {
         this.$route.params.userId &&
         this.$route.params.queueId;
 
+      const isThankYouRoute = this.$route.name === "Thank You";
+
       // Show the navbar if the route is not "Join Queue" or "QueueTicket" with parameters
-      return !(isJoinRoute || isQueueTicketRoute);
+      return !(isJoinRoute || isQueueTicketRoute || isThankYouRoute);
     },
   },
 };

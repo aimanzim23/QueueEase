@@ -151,20 +151,22 @@ export default {
           .then((snapshot) => {
             let lastQueueNo = 0;
             if (!snapshot.empty) {
-              lastQueueNo = snapshot.docs[0].data().queueNo || 0;
+              lastQueueNo = parseInt(snapshot.docs[0].data().queueNo, 10) || 0;
             }
 
             const newQueueNo = lastQueueNo + 1;
+            const formattedQueueNo = String(newQueueNo).padStart(3, "0");
+
             const initialStatus = "Waiting";
 
             // Add the queue with the generated queueId
             addDoc(queuesCollectionRef, {
-              queueId, // Add the queueId field
+              queueId,
               userName: this.newQueue.userName,
               phoneNumber: this.newQueue.phoneNumber,
               service: this.newQueue.service,
               date: Date.now(),
-              queueNo: newQueueNo,
+              queueNo: formattedQueueNo, // Use the formatted queueNo
               status: initialStatus,
             })
               .then(() => {

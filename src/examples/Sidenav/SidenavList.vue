@@ -131,7 +131,7 @@
             VISITOR
           </h6>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <sidenav-item
             url="/dashboard-default"
             :class="getRoute() === 'dashboard-default' ? 'active' : ''"
@@ -154,7 +154,7 @@
               ></i>
             </template>
           </sidenav-item>
-        </li>
+        </li> -->
       </ul>
     </div>
   </div>

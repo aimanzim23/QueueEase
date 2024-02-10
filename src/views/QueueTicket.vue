@@ -336,7 +336,7 @@ export default {
           window.alert("Queue cancelled successfully!");
 
           // // Route back to the join page
-          this.$router.push(`/ThankYou`);
+          this.$router.push(`/thankyou`);
         } else {
           console.error("No queue found with the specified queueId.");
         }
@@ -394,8 +394,7 @@ export default {
               "Thank you for using Queue Ease! Visit our website on www.queueease.com."
             );
 
-            // Optionally, you can perform additional actions after the alert
-            console.log("Redirecting or performing additional actions...");
+            this.$router.push(`/thankyou`);
           }
 
           // Find the current queue based on the waitingCountForService and selectedQueue

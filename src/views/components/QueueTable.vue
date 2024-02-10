@@ -9,7 +9,7 @@
               class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               style="width: 80px"
             >
-              Queue No.
+              Queue No #
             </th>
             <th
               class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
@@ -42,7 +42,7 @@
         <tbody class="text-center">
           <template v-if="paginatedQueues.length > 0">
             <tr v-for="(queue, index) in filteredPaginatedQueues" :key="index">
-              <td class="mb-0 text-sm">#{{ queue.queueNo }}</td>
+              <td class="mb-0 text-sm">{{ queue.queueNo }}</td>
               <td>
                 <h6 class="mb-0 text-sm">{{ queue.userName }}</h6>
                 <p class="text-xs text-secondary mb-0">
@@ -138,7 +138,7 @@
             <span aria-hidden="true">&laquo;</span>
           </a>
         </li>
-        <!-- Display page numbers -->
+
         <li
           class="page-item"
           v-for="pageNumber in pagination.totalPages"
@@ -182,26 +182,22 @@ export default {
       type: String,
       required: true,
     },
-    // Add other props as needed
   },
   data() {
     return {
-      // Define pagination properties
       pagination: {
         currentPage: 1,
-        perPage: 10, // Set your preferred number of items per page
+        perPage: window.innerWidth < 697 ? 3 : 10,
         totalPages: 1,
       },
     };
   },
   computed: {
-    // Calculate paginated queues based on current page
     paginatedQueues() {
       const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
       const end = start + this.pagination.perPage;
       return this.queues.slice(start, end);
     },
-    // Calculate paginated queues based on current page and selected service
     filteredPaginatedQueues() {
       // Filter the paginated queues based on the selected service
       return this.paginatedQueues.filter(
@@ -220,7 +216,6 @@ export default {
   },
   methods: {
     isOngoingDisabled(service) {
-      // Check if there is an ongoing queue for the current service
       return this.paginatedQueues.some(
         (q) => q.service === service && q.status === "Ongoing"
       );
@@ -235,13 +230,13 @@ export default {
         this.pagination.currentPage--;
       }
     },
-    // Update current page to next page
+
     nextPage() {
       if (this.pagination.currentPage < this.pagination.totalPages) {
         this.pagination.currentPage++;
       }
     },
-    // Update current page to a specific page
+
     goToPage(pageNumber) {
       this.pagination.currentPage = pageNumber;
     },
@@ -365,36 +360,42 @@ export default {
         console.error("User not authenticated.");
       }
     },
+    updatePerPage() {
+      this.pagination.perPage = window.innerWidth < 697 ? 3 : 10;
+    },
+  },
+  mounted() {
+    this.updatePerPage();
+
+    window.addEventListener("resize", this.updatePerPage);
   },
 };
 </script>
 
 <style scoped>
-/* Add appropriate styles for the badges and text */
 .badge {
   display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
-  color: white; /* Set the text color */
-  /* Add other necessary styles */
+  color: white;
 }
 
 .text-bg-primary {
-  background-color: #007bff; /* Set your primary color */
+  background-color: #007bff;
 }
 
 .text-bg-secondary {
-  background-color: #6c757d; /* Set your secondary color */
+  background-color: #6c757d;
 }
 
 .text-bg-success {
-  background-color: #28a745; /* Set your success color */
+  background-color: #28a745;
 }
 .text-bg-danger {
-  background-color: #dc3545; /* Set your danger color */
+  background-color: #dc3545;
 }
 .text-bg-warning {
-  background-color: #f16131; /* Set your warning color */
+  background-color: #f16131;
 }
 .circular-buttons-container {
   display: flex;
@@ -403,51 +404,100 @@ export default {
 .circular-button {
   border: none;
   border-radius: 50%;
-  width: 28px; /* Set your preferred width */
-  height: 28px; /* Set your preferred height */
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  margin-right: 10px; /* Set any margin as needed */
-  transition: background-color 0.3s; /* Add a transition effect */
+  margin-right: 10px;
+  transition: background-color 0.3s;
 }
 
-/* Specific styles for different buttons */
 .tick-button {
-  background-color: #28a745; /* Green color for tick button */
+  background-color: #28a745;
   color: white;
 }
 
 .tick-button:hover {
-  background-color: #218838; /* Darker green color on hover */
+  background-color: #218838;
 }
 
 .call-button {
-  background-color: #007bff; /* Blue color for call button */
+  background-color: #007bff;
   color: white;
 }
 
 .call-button:hover {
-  background-color: #0056b3; /* Darker blue color on hover */
+  background-color: #0056b3;
 }
 
 .trash-button {
-  background-color: #dc3545; /* Red color for trash button */
+  background-color: #dc3545;
   color: white;
 }
 
 .trash-button:hover {
-  background-color: #c82333; /* Darker red color on hover */
+  background-color: #c82333;
 }
 
 .circular-button i {
-  font-size: 16px; /* Set your preferred icon size */
+  font-size: 16px;
 }
 .circular-button:disabled,
 .circular-button[disabled] {
-  /* Your disabled button styles here */
-  opacity: 0.5; /* Example: Reducing opacity */
-  cursor: not-allowed; /* Example: Change cursor */
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@media (max-width: 697px) {
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .table {
+    width: 100%;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .table tbody td {
+    display: block;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 10px;
+    border: none;
+  }
+
+  .mobile-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .mobile-cell-status,
+  .mobile-cell-action {
+    margin-left: auto;
+  }
+
+  .circular-buttons-container {
+    text-align: center;
+  }
+
+  .circular-button {
+    display: inline-block;
+    margin: 0 5px;
+  }
 }
 </style>

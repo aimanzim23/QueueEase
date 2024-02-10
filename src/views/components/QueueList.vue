@@ -80,10 +80,10 @@
                   {{
                     ongoingQueueNo !== null && ongoingQueueNo !== undefined
                       ? ongoingQueueNo
-                      : "0"
+                      : "---"
                   }}
                 </div>
-                <div v-else class="display-1" style="color: grey">0</div>
+                <div v-else class="display-1" style="color: grey">---</div>
               </div>
               <div>
                 <timer
@@ -224,6 +224,7 @@ export default {
           });
 
           console.log("Status updated successfully to 'No Show'.");
+          this.stopTimer();
         } catch (error) {
           console.error("Error updating status:", error);
         }

@@ -12,6 +12,7 @@ import QueueTicket from "../views/QueueTicket.vue";
 import LiveQueue from "../views/LiveQueue.vue";
 import announcement from "../views/Announcement.vue";
 import LiveQueueMain from "../views/LiveQueueMain.vue";
+import ThankYou from "../views/ThankYou.vue";
 
 const routes = [
   {
@@ -36,6 +37,16 @@ const routes = [
       authRequired: false,
     },
   },
+  {
+    path: "/thankyou",
+    name: "Thank You",
+    component: ThankYou,
+    props: true,
+    meta: {
+      authRequired: false,
+    },
+  },
+
   {
     path: "/live-queue",
     name: "Live Queue",
