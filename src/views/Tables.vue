@@ -29,6 +29,11 @@
               <th
                 class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
               >
+                Total Visits
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
                 Cancelled Visits
               </th>
               <th></th>
@@ -44,6 +49,9 @@
               </td>
               <td class="text-center text-secondary text-xs font-weight-bold">
                 {{ formatDuration(queue.totalServiceTime) }}
+              </td>
+              <td class="text-center text-secondary text-xs font-weight-bold">
+                {{ countTotalVisits(queue.queues) }}
               </td>
               <td class="text-center text-secondary text-xs font-weight-bold">
                 {{ queue.cancelledVisits }}
@@ -247,6 +255,9 @@ export default {
       return queues
         .filter((queue) => queue.status === "Completed")
         .reduce((total, queue) => total + (queue.serviceTime || 0), 0);
+    },
+    countTotalVisits(queues) {
+      return queues ? queues.length : 0;
     },
     countCancelledVisits(queues) {
       return (
