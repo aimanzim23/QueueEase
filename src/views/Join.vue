@@ -15,7 +15,7 @@
             type="text"
             class="form-control"
             v-model="newQueue.userName"
-            placeholder="Enter user name"
+            placeholder="Enter name"
           />
         </div>
         <div class="mb-3">
@@ -131,11 +131,12 @@ export default {
         let lastQueueNo = 0;
 
         if (!snapshot.empty) {
-          lastQueueNo = snapshot.docs[0].data().queueNo || 0;
+          lastQueueNo = parseInt(snapshot.docs[0].data().queueNo, 10) || 0;
         }
 
         // Increment the queue number for the new queue
         const newQueueNo = lastQueueNo + 1;
+        const formattedQueueNo = String(newQueueNo).padStart(3, "0");
         const initialStatus = "Waiting";
 
         // Generate a unique queue ID using uuid
@@ -150,7 +151,7 @@ export default {
           status: initialStatus,
           phoneNumber: this.newQueue.phoneNumber,
           date: Date.now(),
-          queueNo: newQueueNo, // Add the queueNo field
+          queueNo: formattedQueueNo, // Add the queueNo field
         };
 
         // Add queue data to Firestore in the "queues" collection under the specific user

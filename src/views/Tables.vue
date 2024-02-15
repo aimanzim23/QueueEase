@@ -1,9 +1,29 @@
 <template>
-  <div class="card p-4 m-4">
+  <div class="card p-3 m-3">
     <div
       class="card-header pb-0 d-flex justify-content-between align-items-center"
     >
-      <h6 class="mb-0">History</h6>
+      <h6 class="mb-0 mr-3">History</h6>
+      <div class="date-filter d-flex align-items-center">
+        <div class="form-group mb-0 mr-2 d-flex align-items-center">
+          <label for="startDate" class="mx-3 mt-2">Start:</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            v-model="startDate"
+            id="startDate"
+          />
+        </div>
+        <div class="form-group mb-0 mr-2 d-flex align-items-center">
+          <label for="startDate" class="mx-3 mt-2">End:</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            v-model="endDate"
+            id="endDate"
+          />
+        </div>
+      </div>
     </div>
 
     <div class="card-body px-0 pt-0 pb-2">
@@ -40,7 +60,7 @@
             </tr>
           </thead>
           <tbody class="text-center">
-            <tr v-for="(queue, index) in formattedArchivedQueues" :key="index">
+            <tr v-for="(queue, index) in filteredHistory" :key="index">
               <td class="text-center text-secondary text-xs font-weight-bold">
                 {{ formatDate(queue.date) }}
               </td>
@@ -72,10 +92,7 @@
           </tbody>
         </table>
       </div>
-      <div
-        v-for="(queue, index) in formattedArchivedQueues"
-        :key="'expand-' + index"
-      >
+      <div v-for="(queue, index) in filteredHistory" :key="'expand-' + index">
         <div v-if="isExpanded(index)">
           <div class="table-responsive p-0">
             <table class="table">
@@ -106,7 +123,6 @@
                   >
                     Status
                   </th>
-                  <!-- Add more columns if needed -->
                 </tr>
               </thead>
               <tbody>
@@ -149,7 +165,6 @@
                   >
                     {{ queueItem.status }}
                   </td>
-                  <!-- Add more columns if needed -->
                 </tr>
               </tbody>
             </table>
@@ -157,6 +172,40 @@
         </div>
       </div>
     </div>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination justify-content-center mt-4">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a
+            class="page-link"
+            href="#"
+            aria-label="Previous"
+            @click.prevent="prevPage"
+          >
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+        <li
+          v-for="pageNumber in totalPages"
+          :key="pageNumber"
+          class="page-item"
+          :class="{ active: pageNumber === currentPage }"
+        >
+          <a class="page-link" href="#" @click.prevent="goToPage(pageNumber)">{{
+            pageNumber
+          }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+          <a
+            class="page-link"
+            href="#"
+            aria-label="Next"
+            @click.prevent="nextPage"
+          >
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 
@@ -165,9 +214,64 @@ export default {
   data() {
     return {
       expandedIndex: null,
+
+      currentPage: 1,
+      perPage: 10, // Display 10 items per page
+      startDate: null,
+      endDate: null,
     };
   },
   computed: {
+    filteredHistory() {
+      let filtered = this.sortedFormattedArchivedQueues;
+
+      if (this.startDate && this.endDate) {
+        filtered = filtered.filter((queue) => {
+          const queueDate = new Date(queue.date);
+          const startDate = new Date(this.startDate);
+          const endDate = new Date(this.endDate);
+
+          const queueDateWithoutTime = new Date(
+            queueDate.getFullYear(),
+            queueDate.getMonth(),
+            queueDate.getDate()
+          );
+          const startDateWithoutTime = new Date(
+            startDate.getFullYear(),
+            startDate.getMonth(),
+            startDate.getDate()
+          );
+          const endDateWithoutTime = new Date(
+            endDate.getFullYear(),
+            endDate.getMonth(),
+            endDate.getDate()
+          );
+
+          return (
+            queueDateWithoutTime >= startDateWithoutTime &&
+            queueDateWithoutTime <= endDateWithoutTime
+          );
+        });
+      }
+
+      return filtered;
+    },
+    paginatedHistory() {
+      const startIndex = (this.currentPage - 1) * this.perPage;
+      const endIndex = startIndex + this.perPage;
+      return this.sortedFormattedArchivedQueues.slice(startIndex, endIndex);
+    },
+    totalPages() {
+      return Math.ceil(
+        this.sortedFormattedArchivedQueues.length / this.perPage
+      );
+    },
+    sortedFormattedArchivedQueues() {
+      const formattedArchivedQueues = this.formattedArchivedQueues;
+      return formattedArchivedQueues.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+    },
     formattedArchivedQueues() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
 
@@ -179,10 +283,21 @@ export default {
 
       // Group queues by date
       const groupedQueues = allQueues.reduce((acc, queue) => {
-        const dateKey = new Date(queue.date).toLocaleDateString();
+        const timestamp = queue.date;
+        if (!timestamp || isNaN(timestamp)) {
+          console.log("Invalid timestamp:", timestamp);
+          return acc;
+        }
+
+        const dateKey = this.formatDate(timestamp);
+        if (!dateKey || dateKey === "-") {
+          console.log("Invalid date key:", dateKey);
+          return acc;
+        }
+
         if (!acc[dateKey]) {
           acc[dateKey] = {
-            date: new Date(dateKey).toLocaleString(),
+            date: this.formatDate(timestamp),
             queues: [],
             totalServiceTime: 0,
             cancelledVisits: 0,
@@ -197,10 +312,45 @@ export default {
         return acc;
       }, {});
 
+      // Convert total service time to minutes with two decimal places and log
+      Object.values(groupedQueues).forEach((group) => {
+        group.totalServiceTimeMinutes = +(
+          group.totalServiceTime /
+          (1000 * 60)
+        ).toFixed(2);
+        console.log(
+          `Date: ${group.date}, Total Service Time (minutes): ${group.totalServiceTimeMinutes}`
+        );
+      });
+
       return Object.values(groupedQueues);
     },
   },
   methods: {
+    applyDateFilter() {
+      // Reset pagination to first page
+      this.currentPage = 1;
+      // Trigger re-rendering by resetting the currentPage value
+      this.currentPage = 1;
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+      }
+    },
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+      }
+    },
+    goToPage(pageNumber) {
+      this.currentPage = pageNumber;
+    },
+    getDayOfWeek(date) {
+      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dayIndex = new Date(date).getDay();
+      return daysOfWeek[dayIndex];
+    },
     formatTime(timestamp) {
       const date = new Date(timestamp);
       return date.toLocaleTimeString(); // Adjust the formatting as needed
@@ -221,27 +371,14 @@ export default {
     },
     formatDate(timestamp) {
       const date = new Date(timestamp);
-      // Get the date components
+
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-based
       const year = date.getFullYear();
 
-      return `${day}/${month}/${year}`;
+      return `${month}/${day}/${year}`;
     },
-    getDayOfWeek(timestamp) {
-      const daysOfWeek = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const date = new Date(timestamp);
-      const dayIndex = date.getDay();
-      return daysOfWeek[dayIndex];
-    },
+
     formatDuration(totalServiceTime) {
       // Implement a function to format duration as needed
       // You can convert milliseconds to a human-readable format
@@ -251,23 +388,8 @@ export default {
 
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     },
-    calculateTotalServiceTime(queues) {
-      return queues
-        .filter((queue) => queue.status === "Completed")
-        .reduce((total, queue) => total + (queue.serviceTime || 0), 0);
-    },
     countTotalVisits(queues) {
       return queues ? queues.length : 0;
-    },
-    countCancelledVisits(queues) {
-      return (
-        (queues &&
-          Array.isArray(queues) &&
-          queues.filter(
-            (queue) => queue && queue.status && queue.status === "Cancelled"
-          ).length) ||
-        0
-      );
     },
     toggleCollapse(index) {
       // Toggle collapse for the selected index
@@ -280,10 +402,11 @@ export default {
   },
   async created() {
     try {
-      // Call the fetchArchivedQueues action when the component is created
       await this.$store.dispatch("fetchArchivedQueues");
-      // Action completed, now you can access the archived queues
-      console.log("Archived queues:", this.$store.getters.getArchivedQueues);
+      console.log(
+        "Archived queues fetched",
+        this.$store.getters.getArchivedQueues
+      );
     } catch (error) {
       console.error("Error fetching archived queues:", error);
     }

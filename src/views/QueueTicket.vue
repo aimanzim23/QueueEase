@@ -69,99 +69,124 @@
       <div class="text-center mt-4">
         <!-- Enable Notification Button -->
         <button
-          class="btn btn-primary"
           type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#notificationOffcanvas"
-          aria-controls="notificationOffcanvas"
+          class="btn btn-primary btn-sm mx-3"
+          @click="showNotificationModal = true"
         >
-          Enable Notification
+          <i class="fas fa-bell"></i> Notification
         </button>
 
-        <!-- Notification Off-canvas -->
+        <!-- Notification Modal -->
         <div
-          class="offcanvas offcanvas-bottom"
+          class="modal"
           tabindex="-1"
-          id="notificationOffcanvas"
-          aria-labelledby="notificationOffcanvasLabel"
+          role="dialog"
+          style="display: block"
+          v-if="showNotificationModal"
         >
-          <div class="offcanvas-header">
-            <h5
-              class="offcanvas-title text-dark"
-              id="notificationOffcanvasLabel"
-            >
-              Notification
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="offcanvas-body">
-            <div class="d-grid gap-2">
-              <button class="btn btn-info" @click="testNoti">Test Noti</button>
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Notification</h5>
+                <button
+                  type="button"
+                  class="btn-close"
+                  @click="closeCancelConfirmation"
+                  aria-label="Close"
+                ></button>
+                <span
+                  aria-hidden="true"
+                  style="font-size: 1.5rem; cursor: pointer"
+                  @click="closeCancelConfirmation"
+                  >&times;</span
+                >
+              </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-6">
+                    <button
+                      class="btn btn-primary"
+                      style="width: 100%"
+                      @click="enableNotifications"
+                    >
+                      Enable
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button
+                      class="btn btn-secondary"
+                      style="width: 100%"
+                      @click="closeNotificationModal"
+                    >
+                      Disable
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="d-inline-block mx-1"></div>
 
         <!-- Cancel Queue Button -->
         <button
-          class="btn btn-danger"
           type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#cancelQueueOffcanvas"
-          aria-controls="cancelQueueOffcanvas"
+          class="btn btn-danger btn-sm"
+          @click="showCancelModal = true"
         >
           Cancel Queue
         </button>
 
-        <!-- Cancel Queue Off-canvas -->
+        <!-- Cancel Queue Modal -->
         <div
-          class="offcanvas offcanvas-bottom"
+          class="modal"
           tabindex="-1"
-          id="cancelQueueOffcanvas"
-          aria-labelledby="cancelQueueOffcanvasLabel"
+          role="dialog"
+          style="display: block"
+          v-if="showCancelModal"
         >
-          <div class="offcanvas-header">
-            <h5
-              class="offcanvas-title text-dark"
-              id="cancelQueueOffcanvasLabel"
-            >
-              Cancel queueing?
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="offcanvas-body">
-            <div class="row">
-              <div class="col-6">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Cancel Queue</h5>
                 <button
-                  class="btn btn-danger"
-                  style="width: 100%"
-                  @click="cancelQueue"
-                >
-                  Yes
-                </button>
+                  type="button"
+                  class="btn-close"
+                  @click="showCancelModal = false"
+                  aria-label="Close"
+                ></button>
               </div>
-              <div class="col-6">
-                <button
-                  class="btn btn-secondary"
-                  style="width: 100%"
-                  @click="closeCancelConfirmation"
-                >
-                  No
-                </button>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-6">
+                    <button
+                      class="btn btn-danger"
+                      style="width: 100%"
+                      @click="cancelQueue"
+                    >
+                      Yes
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button
+                      class="btn btn-secondary"
+                      style="width: 100%"
+                      @click="closeCancelConfirmation"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Background overlay -->
+        <div
+          class="modal-backdrop"
+          v-if="showNotificationModal || showCancelModal"
+          @click="closeModals"
+        ></div>
       </div>
     </div>
 
@@ -224,24 +249,31 @@
     <!-- Tab Content -->
     <div v-show="activeTab === 'announcement'">
       <div class="card p-3 m-3" style="max-height: 600px; overflow-y: auto">
-        <div
-          v-for="(announcement, index) in postedAnnouncements"
-          :key="index"
-          class="mb-4 card"
-        >
-          <div class="p-3 card-body">
-            <div class="d-flex">
-              <div>
-                <div class="numbers">
-                  <p class="mb-0 text-sm text-uppercase font-weight-bold">
-                    {{ announcement.title }}
-                  </p>
-                  <h5 class="font-weight-bolder">{{ announcement.content }}</h5>
+        <template v-if="postedAnnouncements.length > 0">
+          <div
+            v-for="(announcement, index) in postedAnnouncements"
+            :key="index"
+            class="mb-4 card"
+          >
+            <div class="p-3 card-body">
+              <div class="d-flex">
+                <div>
+                  <div class="numbers">
+                    <p class="mb-0 text-sm text-uppercase font-weight-bold">
+                      {{ announcement.title }}
+                    </p>
+                    <h5 class="font-weight-bolder">
+                      {{ announcement.content }}
+                    </h5>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
+        <template v-else>
+          <p class="text-center">No announcements available.</p>
+        </template>
       </div>
     </div>
   </div>
@@ -275,6 +307,9 @@ export default {
       isLiveQueuesLoaded: false,
       postedAnnouncements: [],
       averageWaitingTime: "N/A",
+      totalQueues: 0,
+      showNotificationModal: false,
+      showCancelModal: false,
     };
   },
   computed: {
@@ -307,6 +342,13 @@ export default {
     },
   },
   methods: {
+    closeCancelConfirmation() {
+      this.showCancelModal = false;
+    },
+    closeModals() {
+      this.showNotificationModal = false;
+      this.showCancelModal = false;
+    },
     async cancelQueue() {
       try {
         const userId = this.$route.params.userId;
@@ -421,13 +463,10 @@ export default {
     },
     async calculateAverageWaitingTime() {
       try {
-        // Get user and queue IDs from route params
         const userId = this.$route.params.userId;
 
-        // Construct the queues collection reference
         const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-        // Query completed queues based on the selected service
         let completedQueuesQuery;
 
         if (this.selectedService) {
@@ -437,34 +476,28 @@ export default {
             where("service", "==", this.selectedService)
           );
         } else {
-          // If no service is selected, query all completed queues
           completedQueuesQuery = query(
             queuesCollectionRef,
             where("status", "==", "Completed")
           );
         }
 
-        // Listen for real-time updates using onSnapshot
         const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
           let totalWaitingTime = 0;
           let numberOfCompletedQueues = 0;
 
-          // Iterate through completed queues
           snapshot.forEach((queueDoc) => {
             const queueData = queueDoc.data();
 
-            // Ensure the queue has a valid numeric waiting time
             if (
               typeof queueData.waitingTime === "number" &&
               !isNaN(queueData.waitingTime)
             ) {
-              // Accumulate the total waiting time and increment the count
               totalWaitingTime += queueData.waitingTime;
               numberOfCompletedQueues++;
             }
           });
 
-          // Calculate average waiting time
           const averageWaitingTime =
             numberOfCompletedQueues > 0
               ? totalWaitingTime / numberOfCompletedQueues
@@ -480,7 +513,6 @@ export default {
             averageWaitingTime
           );
 
-          // Update the averageWaitingTime property
           this.averageWaitingTime = isNaN(averageWaitingTime)
             ? "N/A"
             : this.formatServiceTime(averageWaitingTime);
@@ -491,7 +523,6 @@ export default {
           );
         });
 
-        // Save the unsubscribe function in a component data property to be used later
         this.unsubscribeAverageWaitingTime = unsubscribe;
       } catch (error) {
         console.error("Error calculating average waiting time:", error);
@@ -503,28 +534,24 @@ export default {
         const userId = this.$route.params.userId;
         const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-        // Use onSnapshot to listen for real-time updates
         onSnapshot(queuesCollectionRef, (querySnapshot) => {
-          // Directly assign a new array
           this.queueData = querySnapshot.docs.map((doc) => doc.data());
 
-          // Filter queues with "Ongoing" status
           this.ongoingQueues = this.queueData.filter(
             (queue) => queue.status === "Ongoing"
           );
 
-          // Filter queues with "Waiting" status
           this.waitingQueues = this.queueData.filter(
             (queue) => queue.status === "Waiting"
           );
 
-          // Now, 'ongoingQueues' contains all the queues that are ongoing
+          this.totalQueues =
+            this.ongoingQueues.length + this.waitingQueues.length;
+
           console.log("Ongoing Queues:", this.ongoingQueues);
 
-          // Now, 'waitingQueues' contains all the queues that are waiting
           console.log("Waiting Queues:", this.waitingQueues);
 
-          // Set the flag to indicate that data is loaded
           this.isLiveQueuesLoaded = true;
         });
       } catch (error) {
@@ -533,11 +560,9 @@ export default {
     },
 
     setActiveTab(tab) {
-      // Check if data is loaded before switching tabs
       if (this.isDataLoaded) {
         this.activeTab = tab;
 
-        // If switching to the "liveQueue" tab, fetch live queues
         if (tab === "liveQueue") {
           this.fetchLiveQueues();
         }
@@ -558,7 +583,6 @@ export default {
   },
   async created() {
     try {
-      // Call the method to calculate and update averageWaitingTime
       await this.calculateAverageWaitingTime();
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -573,7 +597,6 @@ export default {
 </script>
 
 <style scoped>
-/* Add your custom styles here */
 .nav-underline {
   display: flex;
   margin-bottom: 1rem;
@@ -585,17 +608,17 @@ export default {
   text-decoration: none;
   background-color: transparent;
   border: none;
-  width: 100%; /* Make tabs full width */
-  text-align: center; /* Center text in tabs */
+  width: 100%;
+  text-align: center;
 }
 
 .nav-link.active {
-  border-bottom: 2px solid #007bff;
-  color: #0056b3;
+  border-bottom: 2px solid #474646;
+  color: #474646;
 }
 
 .nav-link:hover {
-  border-bottom: 2px solid #0056b3;
+  border-bottom: 2px solid #474646;
 }
 /* Add your custom styles here */
 /* Add your custom styles here */
@@ -667,5 +690,8 @@ export default {
   color: #555;
   margin-top: 20px;
   text-align: center;
+}
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
 }
 </style>

@@ -63,7 +63,7 @@ export default {
   methods: {
     async createQueue() {
       try {
-        this.loading = true; // Set loading to true when the button is clicked
+        this.loading = true;
 
         const user = auth.currentUser;
 
@@ -76,7 +76,6 @@ export default {
 
           await this.$store.dispatch("saveUserData", userData);
 
-          // Simulate a delay for the QR code loading
           this.qrCodeLoading = true;
           setTimeout(() => {
             const joinLink = `http://localhost:8080/join/${user.uid}/${queueId}`;

@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-12">
         <navbar
-          isBlur="blur  border-radius-lg my-3 py-2 start-0 end-0 mx-4 shadow"
+          isBlur="blur border-radius-lg my-3 py-2 start-0 end-0 mx-4 shadow"
           v-bind:darkMode="true"
           isBtn="bg-gradient-success"
         />
@@ -24,6 +24,20 @@
                   <p class="mb-0">Enter your email and password to sign in</p>
                 </div>
                 <div class="card-body">
+                  <!-- Display error message if it exists -->
+                  <div
+                    v-if="error"
+                    class="alert alert-danger alert-dismissible fade show rounded-0"
+                    role="alert"
+                  >
+                    <strong>Error:</strong> {{ error }}
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="alert"
+                      aria-label="Close"
+                    ></button>
+                  </div>
                   <form @submit.prevent="handleSubmit">
                     <div class="mb-3">
                       <label for="email" class="form-label visually-hidden"
@@ -55,7 +69,6 @@
                         required
                       />
                     </div>
-
                     <div class="text-center">
                       <button
                         type="submit"
@@ -73,9 +86,8 @@
                     <a
                       href="javascript:;"
                       class="text-success text-gradient font-weight-bold"
+                      >Sign up</a
                     >
-                      Sign up
-                    </a>
                   </p>
                 </div>
               </div>
@@ -86,7 +98,7 @@
               <div
                 class="position-relative bg-gradient-primary h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center overflow-hidden"
                 style="
-                  background-image: url('https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/signin-ill.jpg');
+                  background-image: url('https://images.unsplash.com/photo-1471110338536-858caa3dbe45?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
                   background-size: cover;
                 "
               >

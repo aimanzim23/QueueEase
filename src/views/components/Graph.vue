@@ -6,7 +6,7 @@
     <div class="p-3 card-body">
       <div class="chart">
         <canvas
-          id="totalServiceTimeChart"
+          id="totalVisitsChart"
           class="chart-canvas"
           height="300"
         ></canvas>
@@ -19,12 +19,12 @@
 import Chart from "chart.js/auto";
 
 export default {
-  name: "ServiceTimeGraph",
+  name: "Graph",
 
   props: {
     title: {
       type: String,
-      default: "Total Service Time Daily",
+      default: "Total Visits Daily",
     },
   },
 
@@ -69,13 +69,15 @@ export default {
             queues: [],
             totalServiceTime: 0,
             cancelledVisits: 0,
-            totalVisits: 0,
+            totalVisits: 0, // Initialize totalVisits
           };
         }
         acc[dateKey].queues.push(queue);
-        acc[dateKey].totalVisits += 1;
+        acc[dateKey].totalVisits += 1; // Increment totalVisits for each queue
         if (queue.status === "Completed") {
-          acc[dateKey].totalServiceTime += (queue.serviceTime || 0) / 60 / 1000; // Convert service time to minutes
+          // Convert service time to minutes
+          acc[dateKey].totalServiceTime +=
+            (queue.serviceTime || 0) / (1000 * 60);
         } else if (queue.status === "Cancelled") {
           acc[dateKey].cancelledVisits += 1;
         }
@@ -88,20 +90,17 @@ export default {
       this.chartData.labels = sortedDateKeys.map((dateKey) =>
         this.formatDate(new Date(groupedQueues[dateKey].date), "MM/DD")
       );
-
-      // Round the totalServiceTime values to two decimal places
       this.chartData.values = sortedDateKeys.map(
-        (dateKey) => +groupedQueues[dateKey].totalServiceTime.toFixed(2)
+        (dateKey) => groupedQueues[dateKey].totalVisits
       );
 
       this.renderChart();
     },
 
     renderChart() {
-      const ctx = document
-        .getElementById("totalServiceTimeChart")
-        .getContext("2d");
+      const ctx = document.getElementById("totalVisitsChart").getContext("2d");
 
+      // Create a linear gradient for the background
       const gradient = ctx.createLinearGradient(0, 0, 0, 300);
       gradient.addColorStop(1, "rgba(94, 114, 228, 0.2)");
       gradient.addColorStop(0.2, "rgba(94, 114, 228, 0.0)");
@@ -113,7 +112,7 @@ export default {
           labels: this.chartData.labels,
           datasets: [
             {
-              label: "Total Service Time (minutes)",
+              label: "Total Visits",
               tension: 0.4,
               borderWidth: 3,
               fill: true,
@@ -129,18 +128,6 @@ export default {
           plugins: {
             legend: {
               display: false,
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const dateIndex = context.dataIndex;
-                  const date = this.chartData.labels[dateIndex];
-                  const totalServiceTime = this.chartData.values[dateIndex];
-                  return `Date: ${date}, Total Service Time (minutes): ${totalServiceTime.toFixed(
-                    2
-                  )}`;
-                },
-              },
             },
           },
           scales: {

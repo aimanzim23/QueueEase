@@ -6,60 +6,57 @@
           <div class="col-lg-3 col-md-6 col-12">
             <card
               title="Today's Users"
-              :value="16"
-              :percentage="stats.money.percentage"
-              iconClass="ni ni-world"
-              :iconBackground="stats.money.iconBackground"
-              :detail="stats.money.detail"
+              :value="totalVisitsToday"
+              iconClass="fas fa-users"
+              iconBackground="bg-gradient-primary"
               directionReverse
             ></card>
           </div>
           <div class="col-lg-3 col-md-6 col-12">
             <card
-              title="Cancelled Visits"
-              value="3"
-              :percentage="stats.users.percentage"
-              :iconClass="stats.users.iconClass"
-              :iconBackground="stats.users.iconBackground"
-              :detail="stats.users.detail"
+              title="Completed Queues"
+              :value="totalCompletedToday"
+              iconClass="fas fa-check-circle"
+              iconBackground="bg-gradient-success"
+              percentageColor="text-danger"
               directionReverse
             ></card>
           </div>
           <div class="col-lg-3 col-md-6 col-12">
             <card
-              title="Completed Visits"
-              value="11"
-              :percentage="stats.clients.percentage"
-              :iconClass="stats.clients.iconClass"
-              :iconBackground="stats.clients.iconBackground"
-              :percentageColor="stats.clients.percentageColor"
-              :detail="stats.clients.detail"
+              title="Average Waiting Time"
+              :value="formattedAverageWaitingTime"
+              iconClass="fas fa-hourglass-half"
+              iconBackground="bg-gradient-danger"
               directionReverse
             ></card>
           </div>
+
           <div class="col-lg-3 col-md-6 col-12">
             <card
               title="Today's Service Time"
-              value="120 min"
-              :percentage="stats.sales.percentage"
-              :iconClass="stats.sales.iconClass"
-              :iconBackground="stats.sales.iconBackground"
-              :detail="stats.sales.detail"
+              :value="formatServiceTime(totalServiceTimeToday)"
+              iconClass="fas fa-clock"
+              iconBackground="bg-gradient-warning"
               directionReverse
             ></card>
           </div>
         </div>
-        <!-- <div class="row"> -->
-        <div class="mb-lg">
-          <!-- line chart -->
-          <div class="card z-index-2">
-            <gradient-line-chart />
+
+        <div class="row">
+          <!-- Place both graphs side by side in a single row -->
+          <div class="col-lg-6">
+            <div class="card z-index-2">
+              <gradient-line-chart />
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card z-index-2">
+              <graph />
+            </div>
           </div>
         </div>
-        <!-- <div class="col-lg-5">
-            <carousel />
-          </div> -->
-        <!-- </div> -->
+
         <div class="row mt-4">
           <div class="col-lg-7 mb-lg-0 mb-4">
             <div class="card">
@@ -69,7 +66,10 @@
                 </div>
               </div>
               <div class="table-responsive">
-                <table class="table align-items-center">
+                <table
+                  v-if="firstFourQueues.length > 0"
+                  class="table align-items-center"
+                >
                   <tbody>
                     <tr v-for="(queue, index) in firstFourQueues" :key="index">
                       <td class="w-30">
@@ -109,74 +109,66 @@
                     </tr>
                   </tbody>
                 </table>
+                <p v-else class="text-center">History is not available.</p>
               </div>
             </div>
           </div>
           <div class="col-lg-5">
-            <notification-card />
+            <announcement-card />
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script>
 import Card from "@/examples/Cards/Card.vue";
 import GradientLineChart from "@/examples/Charts/GradientLineChart.vue";
-
-import NotificationCard from "./components/NotificationCard.vue";
+import Graph from "@/views/components/Graph.vue";
+import AnnouncementCard from "./components/AnnouncementCard.vue";
+import {
+  onSnapshot,
+  doc,
+  collection,
+  query,
+  orderBy,
+  where,
+} from "firebase/firestore";
+import { db, auth } from "@/main";
 
 export default {
   name: "dashboard-default",
   data() {
     return {
-      stats: {
-        money: {
-          title: "Today's Money",
-          value: "$53,000",
-          percentage: "+55%",
-          iconClass: "ni ni-money-coins",
-          detail: "since yesterday",
-          iconBackground: "bg-gradient-primary",
-        },
-        users: {
-          title: "Today's Users",
-          value: "2,300",
-          percentage: "+3%",
-          iconClass: "ni ni-world",
-          iconBackground: "bg-gradient-danger",
-          detail: "since last week",
-        },
-        clients: {
-          title: "New Clients",
-          value: "+3,462",
-          percentage: "-2%",
-          iconClass: "ni ni-paper-diploma",
-          percentageColor: "text-danger",
-          iconBackground: "bg-gradient-success",
-          detail: "since last quarter",
-        },
-        sales: {
-          title: "Sales",
-          value: "$103,430",
-          percentage: "+5%",
-          iconClass: "ni ni-cart",
-          iconBackground: "bg-gradient-warning",
-          detail: "than last month",
-        },
-      },
+      allQueues: [],
+      totalVisitsToday: 0,
+      totalCancelledToday: 0,
+      totalCompletedToday: 0,
+      totalServiceTimeToday: 0,
+      formattedAverageWaitingTime: "N/A",
     };
   },
   components: {
     Card,
     GradientLineChart,
-    NotificationCard,
+    Graph,
+    AnnouncementCard,
   },
 
   computed: {
     firstFourQueues() {
-      // Filter the first four queues from formattedArchivedQueues
-      return this.formattedArchivedQueues.slice(0, 4);
+      // Create a copy of formattedArchivedQueues for sorting
+      const sortedQueues = [...this.formattedArchivedQueues];
+
+      // Sort queues by date in descending order
+      sortedQueues.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // Take the latest four queues
+      return sortedQueues.slice(0, 4).map((queue) => ({
+        ...queue,
+        formattedDate: this.formatDate(queue.date),
+      }));
     },
     formattedArchivedQueues() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
@@ -189,31 +181,154 @@ export default {
 
       // Group queues by date
       const groupedQueues = allQueues.reduce((acc, queue) => {
-        const dateKey = new Date(queue.date).toLocaleDateString();
+        const timestamp = queue.date;
+        if (!timestamp || isNaN(timestamp)) {
+          console.log("Invalid timestamp:", timestamp);
+          return acc;
+        }
+
+        const dateKey = this.formatDate(timestamp);
+        if (!dateKey || dateKey === "-") {
+          console.log("Invalid date key:", dateKey);
+          return acc;
+        }
+
         if (!acc[dateKey]) {
           acc[dateKey] = {
-            date: new Date(dateKey).toLocaleString(),
+            date: this.formatDate(timestamp),
             queues: [],
             totalServiceTime: 0,
             cancelledVisits: 0,
-            totalVisits: 0, // Initialize totalVisits
+            totalVisits: 0, // Add totalVisits property
           };
         }
+
         acc[dateKey].queues.push(queue);
-        acc[dateKey].totalVisits += 1; // Increment totalVisits for each queue
+
+        // Increment totalVisits for each queue
+        acc[dateKey].totalVisits += 1;
+
         if (queue.status === "Completed") {
           acc[dateKey].totalServiceTime += queue.serviceTime || 0;
         } else if (queue.status === "Cancelled") {
           acc[dateKey].cancelledVisits += 1;
         }
+
         return acc;
       }, {});
 
+      console.log("allQueues:", allQueues);
+      console.log("groupedQueues:", groupedQueues);
       return Object.values(groupedQueues);
+    },
+    totalsToday() {
+      return this.calculateTotalsToday();
     },
   },
 
   methods: {
+    async calculateAverageWaitingTime() {
+      const user = auth.currentUser;
+
+      if (user) {
+        const userId = user.uid;
+        const userDocRef = doc(db, "users", userId);
+        const queuesCollectionRef = collection(userDocRef, "queues");
+
+        try {
+          const completedQueuesQuery = query(
+            queuesCollectionRef,
+            where("status", "==", "Completed")
+          );
+
+          const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
+            let totalWaitingTime = 0;
+            let numberOfCompletedQueues = 0;
+
+            snapshot.forEach((queueDoc) => {
+              const queueData = queueDoc.data();
+
+              if (
+                typeof queueData.waitingTime === "number" &&
+                !isNaN(queueData.waitingTime)
+              ) {
+                totalWaitingTime += queueData.waitingTime;
+                numberOfCompletedQueues++;
+              }
+            });
+
+            const averageWaitingTime =
+              numberOfCompletedQueues > 0
+                ? totalWaitingTime / numberOfCompletedQueues
+                : 0;
+
+            // Update the formattedAverageWaitingTime property
+            this.formattedAverageWaitingTime = isNaN(averageWaitingTime)
+              ? "N/A"
+              : this.formatServiceTime(averageWaitingTime);
+          });
+
+          this.unsubscribeAverageWaitingTime = unsubscribe;
+        } catch (error) {
+          console.error("Error calculating average waiting time:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+
+    getDayOfWeek(date) {
+      const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const dayIndex = new Date(date).getDay();
+      return daysOfWeek[dayIndex];
+    },
+    async fetchAllQueues() {
+      try {
+        const user = auth.currentUser;
+
+        if (user) {
+          const userId = user.uid;
+          const userDocRef = doc(db, "users", userId);
+          const queuesCollectionRef = collection(userDocRef, "queues");
+
+          await onSnapshot(
+            query(queuesCollectionRef, orderBy("date")),
+            (snapshot) => {
+              this.allQueues = snapshot.docs.map((doc) => doc.data());
+
+              // Calculate totals for today after fetching queues
+              this.calculateTotalsToday();
+            }
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching queues:", error);
+      }
+    },
+
+    calculateTotalsToday() {
+      const todayKey = new Date().toLocaleDateString();
+      const todayQueues = this.allQueues.filter((queue) => {
+        const queueDate = new Date(queue.date).toLocaleDateString();
+        return queueDate === todayKey;
+      });
+
+      this.totalVisitsToday = todayQueues.length;
+      this.totalCompletedToday = todayQueues.filter(
+        (queue) => queue.status === "Completed"
+      ).length;
+      this.totalCancelledToday = todayQueues.filter(
+        (queue) => queue.status === "Cancelled"
+      ).length;
+      this.totalServiceTimeToday = this.calculateTotalServiceTime(todayQueues);
+    },
+
+    calculateTotalServiceTime(queues) {
+      return queues.reduce((total, queue) => {
+        return total + (queue.serviceTime || 0);
+      }, 0);
+    },
+
     formatTime(timestamp) {
       const date = new Date(timestamp);
       return date.toLocaleTimeString(); // Adjust the formatting as needed
@@ -234,27 +349,14 @@ export default {
     },
     formatDate(timestamp) {
       const date = new Date(timestamp);
-      // Get the date components
+
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-based
       const year = date.getFullYear();
 
-      return `${day}/${month}/${year}`;
+      return `${month}/${day}/${year}`;
     },
-    getDayOfWeek(timestamp) {
-      const daysOfWeek = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const date = new Date(timestamp);
-      const dayIndex = date.getDay();
-      return daysOfWeek[dayIndex];
-    },
+
     formatDuration(totalServiceTime) {
       // Implement a function to format duration as needed
       // You can convert milliseconds to a human-readable format
@@ -264,18 +366,12 @@ export default {
 
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     },
-    calculateTotalServiceTime(queues) {
-      return queues
-        .filter((queue) => queue.status === "Completed")
-        .reduce((total, queue) => total + (queue.serviceTime || 0), 0);
-    },
   },
   async created() {
     try {
-      // Call the fetchArchivedQueues action when the component is created
       await this.$store.dispatch("fetchArchivedQueues");
-      // Action completed, now you can access the archived queues
-      console.log("Archived queues:", this.$store.getters.getArchivedQueues);
+      this.fetchAllQueues();
+      await this.calculateAverageWaitingTime();
     } catch (error) {
       console.error("Error fetching archived queues:", error);
     }

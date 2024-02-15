@@ -170,6 +170,7 @@ import Timer from "./Timer.vue";
 import WaitingList from "./WaitingList.vue";
 import Card from "@/examples/Cards/Card.vue";
 import QueueTable from "./QueueTable.vue";
+import axios from "axios";
 
 export default {
   name: "queue-list",
@@ -197,6 +198,36 @@ export default {
     };
   },
   methods: {
+    sendNotification(queueNo) {
+      const registrationToken =
+        "dmwxwKquN70eFuMiTAI7DA:APA91bFQalUlyuqjxccDkW-ju7VwoFLBDRN66IDZoaINr3L_CHHoskU6ngM63JQiCKQ5ZXgOXxmHmZbOV_Z6iVO5SBikaKAIzJZOJK2R07z8ap_UR1-NMb0gg3aqi4g3zY0ZVB5Irbsv";
+      const title = "QueueEase";
+      const body = `Your queue number ${queueNo} is ready. Come here to get served!`;
+
+      axios
+        .post("http://localhost:3000/send-notification", {
+          registrationToken,
+          title,
+          body,
+        })
+        .then((response) => {
+          console.log("Notification sent successfully:", response.data);
+
+          // Display a notification on the client side
+          if (Notification.permission === "granted") {
+            new Notification(title, { body });
+          } else {
+            Notification.requestPermission().then((permission) => {
+              if (permission === "granted") {
+                new Notification(title, { body });
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error sending notification:", error);
+        });
+    },
     async noShow() {
       const filteredOngoing = this.filteredOngoing;
       const selectedService = this.selectedService;
@@ -239,17 +270,32 @@ export default {
       const queueDate = new Date(dateTime).toLocaleDateString();
       return queueDate === today;
     },
+
     async inviteNextVisitor() {
       const filteredQueues = this.filteredQueues;
       if (filteredQueues.length > 0) {
-        const nextQueue = filteredQueues[0]; // Assuming you want to invite the first one in the filtered list
-        await this.ongoingQueue(nextQueue.id);
-        // Update any necessary UI changes or state after inviting the next visitor
+        const nextQueue = filteredQueues.find(
+          (queue) => queue.status === "Waiting"
+        );
+
+        if (nextQueue) {
+          try {
+            await this.ongoingQueue(nextQueue.id);
+
+            // Update any necessary UI changes or state after inviting the next visitor
+          } catch (error) {
+            console.error("Error inviting next visitor:", error);
+          }
+        } else {
+          console.log("No visitors in the waiting queue.");
+          // Handle the case when there are no visitors with a status of "Waiting"
+        }
       } else {
         console.log("No visitors in the waiting queue.");
         // Handle the case when there are no visitors in the waiting queue
       }
     },
+
     async endVisit() {
       const filteredOngoing = this.filteredOngoing;
       const selectedService = this.selectedService; // Assuming you have a selectedService property
@@ -405,12 +451,14 @@ export default {
               "Total service time of completed queues (formatted):",
               formattedTotalServiceTime
             );
-
-            console.log("Number of Completed Queues:", numberOfCompletedQueues);
-            console.log(
-              "Average service time of completed queues:",
-              averageServiceTime
-            );
+            const date = new Date("2024-02-12");
+            const timestamp = date.getTime();
+            console.log(timestamp);
+            // console.log("Number of Completed Queues:", numberOfCompletedQueues);
+            // console.log(
+            //   "Average service time of completed queues:",
+            //   averageServiceTime
+            // );
 
             // Update the formattedAverageServiceTime property
             this.formattedAverageServiceTime = isNaN(averageServiceTime)
@@ -562,9 +610,8 @@ export default {
               startTime: Date.now(), // Add a field to store the start time
               waitingTime: waitingTime, // Add a field to store the waiting time
             });
+            this.sendNotification(queueData.queueNo);
 
-            console.log("Queue set to Ongoing status.");
-            console.log("Waiting Time:", waitingTime);
             this.startTimer();
             this.isOngoingQueueForService = false;
 

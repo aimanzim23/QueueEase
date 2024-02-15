@@ -1,10 +1,11 @@
-import { auth } from "@/main";
+import { auth, db } from "@/main";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import router from "@/router";
 
 const state = {
@@ -31,14 +32,30 @@ const mutations = {
 };
 
 const actions = {
-  async signup(context, { email, password }) {
-    console.log("signup action");
-    try {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
-      context.commit("setUser", res.user);
-    } catch (error) {
-      throw new Error("The signup was unsuccessful");
-    }
+  async signup(
+    { commit },
+    { email, password, firstName, lastName, companyName }
+  ) {
+    // Create user with email and password
+    const authResult = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = authResult.user;
+
+    // Store additional user information in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      firstName: firstName,
+      lastName: lastName,
+      companyName: companyName,
+      email: email,
+    });
+
+    // Commit the user to the Vuex store
+    commit("setUser", user);
+
+    return user;
   },
   async signin({ commit }, { email, password }) {
     try {

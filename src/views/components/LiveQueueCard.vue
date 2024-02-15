@@ -1,4 +1,3 @@
-<!-- QueueCard.vue -->
 <template>
   <div class="mb-4 card">
     <div class="p-3 card-body">

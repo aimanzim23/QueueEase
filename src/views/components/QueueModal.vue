@@ -1,39 +1,37 @@
 <template>
   <div>
-    <!-- Button trigger modal -->
+    <!-- Button to trigger modal -->
     <button
       type="button"
       class="btn btn-primary btn-sm"
-      data-bs-toggle="modal"
-      data-bs-target="#exampleModalCenter"
-      style="margin-left: 10px"
+      @click="showModal = true"
     >
       Add Queue
     </button>
 
-    <!-- Bootstrap Modal Structure -->
+    <!-- Vue Modal -->
     <div
-      class="modal fade"
-      id="exampleModalCenter"
+      class="modal"
       tabindex="-1"
-      aria-labelledby="addForm"
-      aria-hidden="true"
+      role="dialog"
+      style="display: block"
+      v-if="showModal"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addForm">Add Users To Queue</h5>
+            <h5 class="modal-title">Add User to Queue</h5>
             <button
               type="button"
               class="btn-close"
-              data-bs-dismiss="modal"
+              @click="showModal = false"
               aria-label="Close"
             ></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="userName" class="form-label">User Name</label>
+                <label for="userName" class="form-label">Visitor's Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -52,16 +50,11 @@
               </div>
               <div class="mb-3">
                 <label for="service" class="form-label">Service</label>
-
-                <select
-                  class="form-select"
-                  v-model="newQueue.service"
-                  placeholder="Choose service"
-                >
+                <select class="form-select" v-model="newQueue.service">
                   <option disabled value="">Please select a service</option>
                   <!-- Populate options from fetched services -->
                   <option
-                    v-for="(service, index) in services"
+                    v-for="(service, index) in availableServices"
                     :key="index"
                     :value="service.serviceName"
                   >
@@ -69,18 +62,34 @@
                   </option>
                 </select>
               </div>
-              <button
-                type="button"
-                class="btn btn-primary"
-                @click="addNewQueue"
-              >
-                Add
-              </button>
+              <div class="d-flex justify-content-end">
+                <button
+                  type="button"
+                  class="btn btn-danger mx-2"
+                  @click="showModal = false"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  @click="addNewQueue"
+                >
+                  Add
+                </button>
+              </div>
             </form>
           </div>
         </div>
       </div>
     </div>
+    <!-- Backdrop -->
+    <div
+      class="modal-backdrop"
+      style="background-color: rgba(0, 0, 0, 0.5)"
+      v-if="showModal"
+      @click="showModal = false"
+    ></div>
   </div>
 </template>
 
@@ -90,10 +99,10 @@ import {
   collection,
   addDoc,
   orderBy,
-  doc,
   query,
   getDocs,
   limit,
+  doc,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 
@@ -107,6 +116,7 @@ export default {
         service: "",
       },
       availableServices: [],
+      showModal: false,
     };
   },
   methods: {
@@ -118,9 +128,9 @@ export default {
 
         try {
           const querySnapshot = await getDocs(servicesCollectionRef);
-          this.services = [];
+          this.availableServices = [];
           querySnapshot.forEach((doc) => {
-            this.services.push(doc.data());
+            this.availableServices.push(doc.data());
           });
         } catch (error) {
           console.error("Error fetching services:", error);
@@ -129,11 +139,10 @@ export default {
         console.error("User not authenticated.");
       }
     },
-    addNewQueue: function () {
+    addNewQueue() {
       const user = auth.currentUser;
       if (user) {
         const userId = user.uid;
-
         const userDocRef = doc(db, "users", userId);
         const queuesCollectionRef = collection(userDocRef, "queues");
 
@@ -176,6 +185,7 @@ export default {
                   phoneNumber: "",
                   service: "",
                 };
+                this.showModal = false; // Close the modal
               })
               .catch((error) => {
                 console.error(
@@ -199,6 +209,13 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* Optional styles for the modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
 </style>

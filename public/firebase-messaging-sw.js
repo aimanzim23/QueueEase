@@ -1,5 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
-import { getMessaging } from "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
+import {
+  getMessaging,
+  onBackgroundMessage,
+} from "https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js";
 
 // Your Firebase config object
 const firebaseConfig = {
@@ -11,25 +14,21 @@ const firebaseConfig = {
   appId: "1:939207601352:web:efb6939135f082c6e209fd",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Retrieve Firebase Messaging instance
 const messaging = getMessaging(app);
 
-// Set up an event listener to handle background messages
-messaging.onBackgroundMessage((payload) => {
+onBackgroundMessage(messaging, (payload) => {
   console.log(
     "[firebase-messaging-sw.js] Received background message ",
     payload
   );
 
-  // Customize notification here
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
     icon: "/apple-icon.png",
   };
 
+  // Display the notification
   self.registration.showNotification(notificationTitle, notificationOptions);
 });

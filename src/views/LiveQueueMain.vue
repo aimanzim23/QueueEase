@@ -22,28 +22,6 @@
 
     <div class="card-body">
       <div class="row">
-        <!-- First Column (col-12 for mobile, col-md-5 for larger screens) -->
-        <div class="col-12 col-md-5">
-          <!-- Display each pair in a card -->
-          <div
-            class="card mb-3"
-            v-for="queue in ongoingQueues"
-            :key="queue.queueId"
-          >
-            <div
-              class="card-body d-flex justify-content-between align-items-center"
-            >
-              <div>
-                <h5 class="card-title">{{ queue.service }}</h5>
-                <p class="card-text">{{ queue.userName }}</p>
-              </div>
-              <p class="card-text" style="font-size: 24px; font-weight: bold">
-                #{{ queue.queueNo }}
-              </p>
-            </div>
-          </div>
-        </div>
-        <!-- Second Column (col-12 for mobile, col-md-7 for larger screens) -->
         <div class="col-12 col-md-7">
           <div class="row">
             <div class="col-12 mb-3">
@@ -69,9 +47,38 @@
             </div>
           </div>
         </div>
+        <div class="col-12 col-md-5">
+          <template v-if="ongoingQueues.length > 0">
+            <!-- Display each pair in a card -->
+            <div
+              class="card mb-3"
+              v-for="queue in ongoingQueues"
+              :key="queue.queueId"
+            >
+              <div
+                class="card-body d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <h5 class="card-title">{{ queue.service }}</h5>
+                  <p class="card-text">{{ queue.userName }}</p>
+                </div>
+                <p class="card-text" style="font-size: 24px; font-weight: bold">
+                  #{{ queue.queueNo }}
+                </p>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="card mb-3">
+              <div class="card-body">
+                <p class="card-text">No ongoing queues right now</p>
+              </div>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
-    <!-- Announcement at the bottom with moving animation -->
+
     <div v-if="postedAnnouncements.length > 0" class="announcement-container">
       <marquee behavior="scroll" direction="left">
         <p class="mb-0 announcement">
@@ -136,7 +143,7 @@ export default {
       setInterval(() => {
         this.currentAnnouncementIndex =
           (this.currentAnnouncementIndex + 1) % this.postedAnnouncements.length;
-      }, 5000); // Change the interval as needed
+      }, 5000);
     },
     async fetchLiveQueues() {
       try {
@@ -192,7 +199,6 @@ export default {
   mounted() {
     this.fetchLiveQueues();
     this.fetchAnnouncements();
-    // Start the animation for moving announcements
     this.startAnnouncementAnimation();
   },
 };
@@ -201,24 +207,23 @@ export default {
 <style scoped>
 .fullscreen-icon {
   cursor: pointer;
-  font-size: 1.5rem; /* Adjust the size as needed */
+  font-size: 1.5rem;
   transition: transform 0.3s, color 0.3s;
 }
 
 .fullscreen-icon:hover {
-  color: #28a745; /* Change the color on hover */
-  transform: scale(1.1); /* Add a scale effect on hover */
+  color: #28a745;
+  transform: scale(1.1);
 }
 
 .fullscreen-icon:active {
-  transform: scale(0.9); /* Add a scale effect on click */
+  transform: scale(0.9);
 }
 .fullscreen {
   width: 100vw;
   height: 100vh;
 }
 
-/* Additional styles for larger screens (adjust as needed) */
 @media (min-width: 768px) {
   .fullscreen {
     display: flex;
@@ -238,20 +243,20 @@ export default {
   }
 
   .video-container {
-    width: 100%; /* Adjust the width of the video container */
+    width: 100%;
   }
 
   iframe {
     width: 100%;
-    height: 400px; /* Adjust the height of the video */
+    height: 400px;
   }
 
   .custom-large-text {
-    font-size: 2rem; /* Adjust the size of the custom-large-text */
+    font-size: 2rem;
   }
 }
 .announcement-item {
-  margin-right: 1000px; /* Adjust the margin as needed */
+  margin-right: 1000px;
 }
 .live-queue-board {
   display: grid;
@@ -266,7 +271,7 @@ export default {
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.3s ease-in-out;
-  margin-bottom: 20px; /* Added margin to separate cards */
+  margin-bottom: 20px;
 }
 
 .queue-card:hover {
@@ -275,12 +280,11 @@ export default {
 
 .larger-card {
   grid-row: span 2;
-  /* Add visual style for larger-card */
+
   background-color: lightblue;
 }
 
 .smaller-card {
-  /* Add visual style for smaller-card */
   background-color: lightgreen;
 }
 .announcement-container {
@@ -305,6 +309,6 @@ export default {
   }
 }
 .custom-large-text {
-  font-size: 1.5rem; /* Adjust the size as needed */
+  font-size: 1.5rem;
 }
 </style>

@@ -171,6 +171,7 @@
 <script>
 import { deleteDoc, updateDoc, getDoc, doc } from "firebase/firestore";
 import { db, auth } from "@/main";
+import axios from "axios";
 export default {
   name: "queue-table",
   props: {
@@ -215,6 +216,36 @@ export default {
     },
   },
   methods: {
+    sendNotification(queueNo) {
+      const registrationToken =
+        "dmwxwKquN70eFuMiTAI7DA:APA91bFQalUlyuqjxccDkW-ju7VwoFLBDRN66IDZoaINr3L_CHHoskU6ngM63JQiCKQ5ZXgOXxmHmZbOV_Z6iVO5SBikaKAIzJZOJK2R07z8ap_UR1-NMb0gg3aqi4g3zY0ZVB5Irbsv";
+      const title = "QueueEase";
+      const body = `Your queue number ${queueNo} is ready. Come here to get served!`;
+
+      axios
+        .post("http://localhost:3000/send-notification", {
+          registrationToken,
+          title,
+          body,
+        })
+        .then((response) => {
+          console.log("Notification sent successfully:", response.data);
+
+          // Display a notification on the client side
+          if (Notification.permission === "granted") {
+            new Notification(title, { body });
+          } else {
+            Notification.requestPermission().then((permission) => {
+              if (permission === "granted") {
+                new Notification(title, { body });
+              }
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error sending notification:", error);
+        });
+    },
     isOngoingDisabled(service) {
       return this.paginatedQueues.some(
         (q) => q.service === service && q.status === "Ongoing"
@@ -326,15 +357,17 @@ export default {
               waitingTime: waitingTime, // Add a field to store the waiting time
             });
 
-            console.log("Queue set to Ongoing status.");
-            console.log("Waiting Time:", waitingTime);
+            // Call the sendNotification function here
+            this.sendNotification(queueData.queueNo);
+
+            // Start the timer
             this.startTimer();
+
+            // Set the flag to indicate ongoing queue for the service
             this.isOngoingQueueForService = false;
 
             // Return the startTimestamp to use for calculating service time in completeQueue
             return Date.now();
-          } else {
-            console.log("Queue is not in a waiting state.");
           }
         } catch (error) {
           console.error("Error setting queue to Ongoing:", error);
@@ -343,6 +376,7 @@ export default {
         console.error("User not authenticated.");
       }
     },
+
     async deleteQueue(id) {
       const user = auth.currentUser;
       if (user) {

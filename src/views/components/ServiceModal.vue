@@ -1,6 +1,11 @@
 <template>
   <div class="pt-0 card-body pt-sm-3">
     <div>
+      <!-- Add loading spinner -->
+      <div v-if="addingService" class="text-center">
+        <i class="fas fa-spinner fa-spin"></i> Adding Service...
+      </div>
+
       <div class="d-flex align-items-center justify-content-between">
         <h6 class="mb-2">Services</h6>
         <div class="d-flex align-items-center">
@@ -49,11 +54,17 @@
           <li
             v-for="(service, index) in services"
             :key="index"
-            class="service-item"
+            class="service-item d-flex justify-content-between align-items-center"
           >
-            <p>Service Name: {{ service.serviceName }}</p>
-            <p>Description: {{ service.description }}</p>
-            <!-- Display other service details as needed -->
+            <div>
+              <p>Service Name: {{ service.serviceName }}</p>
+              <p>Description: {{ service.description }}</p>
+            </div>
+
+            <i
+              @click="removeService(index)"
+              class="fas fa-trash text-danger"
+            ></i>
           </li>
         </ul>
         <p v-else>No services available.</p>
@@ -64,7 +75,13 @@
 
 <script>
 import { db, auth } from "@/main";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 export default {
   name: "service-modal",
   data() {
@@ -76,13 +93,39 @@ export default {
         // Add other fields for the service as needed
       },
       services: [],
+      addingService: false, // Track whether service is being added
     };
   },
 
   methods: {
-    addNewService() {
+    async removeService(index) {
       const user = auth.currentUser;
       if (user) {
+        const service = this.services[index];
+        const servicesCollectionRef = collection(
+          db,
+          "users",
+          user.uid,
+          "services"
+        );
+        const serviceDocRef = doc(servicesCollectionRef, service.id);
+
+        try {
+          await deleteDoc(serviceDocRef);
+          // Remove the service from the local array
+          this.services.splice(index, 1);
+          console.log("Service removed successfully!");
+        } catch (error) {
+          console.error("Error removing service:", error);
+        }
+      } else {
+        console.error("User not authenticated.");
+      }
+    },
+    async addNewService() {
+      const user = auth.currentUser;
+      if (user) {
+        this.addingService = true; // Set addingService to true when adding service
         const servicesCollectionRef = collection(
           db,
           "users",
@@ -109,6 +152,9 @@ export default {
           })
           .catch((error) => {
             console.error("Error adding service: ", error);
+          })
+          .finally(() => {
+            this.addingService = false; // Set addingService to false after adding service
           });
       } else {
         console.error("User not authenticated.");
@@ -128,7 +174,8 @@ export default {
           const querySnapshot = await getDocs(servicesCollectionRef);
           this.services = [];
           querySnapshot.forEach((doc) => {
-            this.services.push(doc.data());
+            // Include the id property for each service
+            this.services.push({ id: doc.id, ...doc.data() });
           });
         } catch (error) {
           console.error("Error fetching services:", error);
@@ -139,7 +186,6 @@ export default {
     },
   },
   mounted() {
-    // Fetch services when the component is mounted
     this.fetchServices();
   },
 };

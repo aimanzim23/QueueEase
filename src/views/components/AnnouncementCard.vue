@@ -4,7 +4,7 @@
       <h6 class="mb-0">Announcements</h6>
     </div>
     <div class="p-3 card-body">
-      <ul class="list-group">
+      <ul v-if="displayedAnnouncements.length > 0" class="list-group">
         <li
           v-for="(announcement, index) in displayedAnnouncements"
           :key="index"
@@ -22,14 +22,21 @@
             </div>
           </div>
           <div class="d-flex">
-            <button
-              class="my-auto btn btn-link btn-icon-only btn-rounded btn-sm text-dark icon-move-right"
-            >
-              <i class="ni ni-bold-right" aria-hidden="true"></i>
-            </button>
+            <a href="/announcement">
+              <button
+                class="my-auto btn btn-link btn-icon-only btn-rounded btn-sm text-dark icon-move-right"
+              >
+                <i class="ni ni-bold-right" aria-hidden="true"></i>
+              </button>
+            </a>
           </div>
         </li>
       </ul>
+      <p v-else class="text-center">
+        No announcements available.
+        <a href="/announcement">Go to announcement page</a> to publish
+        announcement.
+      </p>
     </div>
   </div>
 </template>
@@ -39,7 +46,7 @@ import { collection, getDocs, doc } from "firebase/firestore";
 import { db, auth } from "@/main"; // Assuming you have a firebase.js file exporting your db instance
 
 export default {
-  name: "notification-card",
+  name: "announcement-card",
   data() {
     return {
       postedAnnouncements: [],

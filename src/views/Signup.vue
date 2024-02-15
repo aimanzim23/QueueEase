@@ -10,7 +10,7 @@
     <div
       class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg"
       style="
-        background-image: url('https://www.pexels.com/photo/people-in-line-1604200/');
+        background-image: url('https://images.unsplash.com/photo-1628557960762-0d884fd31ea0?q=80&w=2833&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
         background-position: top;
       "
     >
@@ -33,13 +33,23 @@
             <div class="card-body">
               <form @submit.prevent="handleSubmit">
                 <div class="mb-3">
-                  <label for="name" class="form-label">Name</label>
+                  <label for="firstName" class="form-label">First Name</label>
                   <input
                     type="text"
                     class="form-control"
-                    id="name"
-                    placeholder="Enter your name"
-                    v-model="name"
+                    id="firstName"
+                    placeholder="Enter your first name"
+                    v-model="firstName"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="lastName" class="form-label">Last Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="lastName"
+                    placeholder="Enter your last name"
+                    v-model="lastName"
                   />
                 </div>
                 <div class="mb-3">
@@ -113,7 +123,7 @@ import { useRouter } from "vue-router";
 const body = document.getElementsByTagName("body")[0];
 
 export default {
-  name: "signin",
+  name: "signup",
   components: {
     Navbar,
     AppFooter,
@@ -144,24 +154,34 @@ export default {
   setup() {
     const email = ref("");
     const password = ref("");
+    const firstName = ref("");
+    const lastName = ref("");
+    const companyName = ref("");
+    const error = ref(null);
 
     const store = useStore();
     const router = useRouter();
-    const error = ref(null);
 
     const handleSubmit = async () => {
-      try {
-        await store.dispatch("signup", {
-          email: email.value,
-          password: password.value,
-        });
-        router.push("/dashboard-default");
-      } catch (err) {
-        error.value = err.message;
-      }
+      await store.dispatch("signup", {
+        email: email.value,
+        password: password.value,
+        firstName: firstName.value,
+        lastName: lastName.value,
+        companyName: companyName.value,
+      });
+      router.push("/dashboard-default");
     };
 
-    return { handleSubmit, email, password };
+    return {
+      handleSubmit,
+      email,
+      password,
+      firstName,
+      lastName,
+      companyName,
+      error,
+    };
   },
 };
 </script>
