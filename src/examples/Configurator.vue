@@ -56,17 +56,31 @@
       <div class="tab-content">
         <div v-show="activeTab === 'tab1'">
           <service-modal />
-          <div class="text-center">
-            <button
-              type="button"
-              class="btn btn-danger btn-md"
-              style="margin-left: 10px"
-              @click="endQueuesForToday"
+          <div class="mx-4">
+            <input
+              type="checkbox"
+              id="autoEndCheckbox"
+              v-model="autoEndAtMidnight"
+            />
+            <label
+              for="autoEndCheckbox"
+              style="font-size: 16px; margin-left: 10px"
             >
-              End Session
-            </button>
+              Auto End at Midnight
+            </label>
+            <div class="text-center">
+              <button
+                type="button"
+                class="btn btn-danger btn-md mt-4"
+                style="margin-left: 10px"
+                @click="endQueuesForToday"
+              >
+                End Session
+              </button>
+            </div>
           </div>
         </div>
+
         <div v-show="activeTab === 'tab2'">
           <div class="pt-0 card-body pt-sm-3">
             <div>
@@ -192,14 +206,27 @@ export default {
   components: { ServiceModal },
   data() {
     return {
-      activeTab: "tab1", // Default active tab
+      activeTab: "tab1",
+      autoEndAtMidnight: false,
     };
   },
   props: ["toggle"],
   methods: {
     async endQueuesForToday() {
       try {
-        await this.$store.dispatch("endQueuesForToday");
+        if (this.autoEndAtMidnight) {
+          const now = new Date();
+          const midnight = new Date();
+          midnight.setHours(0, 0, 0, 0);
+
+          if (now.getTime() >= midnight.getTime()) {
+            await this.$store.dispatch("endQueuesForToday");
+          } else {
+            console.log("It's not midnight yet. Session not ended.");
+          }
+        } else {
+          await this.$store.dispatch("endQueuesForToday");
+        }
       } catch (error) {
         console.error("Error ending queues for today in component:", error);
       }
