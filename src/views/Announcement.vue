@@ -131,7 +131,6 @@ export default {
 
             await updateDoc(announcementRef, announcementData);
 
-            // Update the local state to reflect the changes
             const editedIndex = this.postedAnnouncements.findIndex(
               (ann) => ann.id === this.editingAnnouncementId
             );
@@ -143,13 +142,11 @@ export default {
               };
             }
           } else {
-            // If not editing, add a new announcement
             const addedDoc = await addDoc(
               announcementsCollectionRef,
               announcementData
             );
 
-            // Update the local state to reflect the addition
             this.postedAnnouncements.unshift({
               id: addedDoc.id,
               ...announcementData,

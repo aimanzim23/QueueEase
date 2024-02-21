@@ -36,7 +36,7 @@
               </div>
             </div>
           </div>
-          <!-- New row for date and time -->
+
           <div class="row">
             <div class="col-12">
               <p
@@ -49,7 +49,6 @@
         </div>
         <div class="col-12 col-md-5">
           <template v-if="ongoingQueues.length > 0">
-            <!-- Display each pair in a card -->
             <div
               class="card mb-3"
               v-for="queue in ongoingQueues"

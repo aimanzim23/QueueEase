@@ -54,7 +54,6 @@ export default {
     processDataForChart() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
 
-      // Flatten the object into an array of queues
       const allQueues = Object.values(archivedQueues).reduce(
         (acc, queue) => acc.concat(queue),
         []
@@ -69,11 +68,11 @@ export default {
             queues: [],
             totalServiceTime: 0,
             cancelledVisits: 0,
-            totalVisits: 0, // Initialize totalVisits
+            totalVisits: 0,
           };
         }
         acc[dateKey].queues.push(queue);
-        acc[dateKey].totalVisits += 1; // Increment totalVisits for each queue
+        acc[dateKey].totalVisits += 1;
         if (queue.status === "Completed") {
           // Convert service time to minutes
           acc[dateKey].totalServiceTime +=
@@ -84,7 +83,6 @@ export default {
         return acc;
       }, {});
 
-      // Sort the date keys
       const sortedDateKeys = Object.keys(groupedQueues).sort().slice(-8);
 
       this.chartData.labels = sortedDateKeys.map((dateKey) =>
@@ -100,7 +98,6 @@ export default {
     renderChart() {
       const ctx = document.getElementById("totalVisitsChart").getContext("2d");
 
-      // Create a linear gradient for the background
       const gradient = ctx.createLinearGradient(0, 0, 0, 300);
       gradient.addColorStop(1, "rgba(94, 114, 228, 0.2)");
       gradient.addColorStop(0.2, "rgba(94, 114, 228, 0.0)");

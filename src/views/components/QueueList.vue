@@ -183,13 +183,13 @@ export default {
         service: "",
       },
       timerInterval: null,
-      elapsedTime: 0, // Initialize the elapsed time
+      elapsedTime: 0,
       pagination: {
         currentPage: 1,
         perPage: 3,
         totalPages: 1,
       },
-      selectedService: null, // To store the selected service ID
+      selectedService: null,
       availableServices: [],
       formattedAverageServiceTime: "N/A",
       unsubscribeAverageServiceTime: null,
@@ -249,7 +249,6 @@ export default {
         const queueDocRef = doc(db, "users", userId, "queues", ongoingVisit.id);
 
         try {
-          // Update the queue status to 'No Show'
           await updateDoc(queueDocRef, {
             status: "No Show",
           });
@@ -266,7 +265,6 @@ export default {
       }
     },
     isSameDate(dateTime, today) {
-      // Assuming 'date' is a property in your queue object
       const queueDate = new Date(dateTime).toLocaleDateString();
       return queueDate === today;
     },
@@ -281,24 +279,20 @@ export default {
         if (nextQueue) {
           try {
             await this.ongoingQueue(nextQueue.id);
-
-            // Update any necessary UI changes or state after inviting the next visitor
           } catch (error) {
             console.error("Error inviting next visitor:", error);
           }
         } else {
           console.log("No visitors in the waiting queue.");
-          // Handle the case when there are no visitors with a status of "Waiting"
         }
       } else {
         console.log("No visitors in the waiting queue.");
-        // Handle the case when there are no visitors in the waiting queue
       }
     },
 
     async endVisit() {
       const filteredOngoing = this.filteredOngoing;
-      const selectedService = this.selectedService; // Assuming you have a selectedService property
+      const selectedService = this.selectedService;
 
       const ongoingVisit = filteredOngoing.find(
         (queue) =>
@@ -312,32 +306,28 @@ export default {
           "Attempting to complete the ongoing visit from filtered queues..."
         );
         await this.completeQueue(ongoingVisit.id);
-        // Perform any UI updates or state changes after ending the visit
       } else {
         console.log(
           "No ongoing visit found in the selected service within filtered queues."
         );
-        // Handle the case when there is no ongoing visit in the selected service within filtered queues
       }
     },
 
     async fetchServices() {
-      // Assume `auth.currentUser` is available for the authenticated user
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(db, "users", user.uid); // Reference to the user's document
-        const servicesCollectionRef = collection(userDocRef, "services"); // Reference to the services collection
+        const userDocRef = doc(db, "users", user.uid);
+        const servicesCollectionRef = collection(userDocRef, "services");
 
         try {
           const querySnapshot = await getDocs(servicesCollectionRef);
-          this.availableServices = []; // Clear existing services
+          this.availableServices = [];
           querySnapshot.forEach((doc) => {
             const serviceData = doc.data();
-            // Push each service into the availableServices array
+
             this.availableServices.push({
               id: doc.id,
-              serviceName: serviceData.serviceName, // Adjust based on your service data structure
-              // Other service properties if needed
+              serviceName: serviceData.serviceName,
             });
           });
         } catch (error) {
@@ -359,7 +349,6 @@ export default {
     },
     goToPage(pageNumber) {
       this.pagination.currentPage = pageNumber;
-      // Add logic to update the displayed content
     },
     getCurrentUser() {
       const currentUser = auth.currentUser;
@@ -385,7 +374,6 @@ export default {
     },
 
     async calculateAverageServiceTime() {
-      console.log("Service selected:", this.selectedService);
       const user = auth.currentUser;
 
       if (user) {
@@ -394,7 +382,6 @@ export default {
         const queuesCollectionRef = collection(userDocRef, "queues");
 
         try {
-          // Query completed queues based on the selected service
           let completedQueuesQuery;
 
           if (this.selectedService) {
@@ -404,74 +391,38 @@ export default {
               where("service", "==", this.selectedService)
             );
           } else {
-            // If no service is selected, query all completed queues
             completedQueuesQuery = query(
               queuesCollectionRef,
               where("status", "==", "Completed")
             );
           }
 
-          // Listen for real-time updates using onSnapshot
           const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
             let totalServiceTime = 0;
             let numberOfCompletedQueues = 0;
 
-            // Iterate through completed queues
             snapshot.forEach((queueDoc) => {
               const queueData = queueDoc.data();
 
-              // Ensure the queue has a valid numeric service time
               if (
                 typeof queueData.serviceTime === "number" &&
                 !isNaN(queueData.serviceTime)
               ) {
-                // Accumulate the total service time and increment the count
                 totalServiceTime += queueData.serviceTime;
                 numberOfCompletedQueues++;
               }
             });
 
-            // Calculate average service time
             const averageServiceTime =
               numberOfCompletedQueues > 0
                 ? totalServiceTime / numberOfCompletedQueues
                 : 0;
 
-            console.log(
-              "Total service time of completed queues (numeric):",
-              totalServiceTime
-            );
-
-            // Log the total service time in a formatted manner
-            const formattedTotalServiceTime = this.formatServiceTime(
-              totalServiceTime
-            );
-
-            console.log(
-              "Total service time of completed queues (formatted):",
-              formattedTotalServiceTime
-            );
-            const date = new Date("2024-02-12");
-            const timestamp = date.getTime();
-            console.log(timestamp);
-            // console.log("Number of Completed Queues:", numberOfCompletedQueues);
-            // console.log(
-            //   "Average service time of completed queues:",
-            //   averageServiceTime
-            // );
-
-            // Update the formattedAverageServiceTime property
             this.formattedAverageServiceTime = isNaN(averageServiceTime)
               ? "N/A"
               : this.formatServiceTime(averageServiceTime);
-
-            console.log(
-              "Formatted Average Service Time:",
-              this.formattedAverageServiceTime
-            );
           });
 
-          // Save the unsubscribe function in a component data property to be used later
           this.unsubscribeAverageServiceTime = unsubscribe;
         } catch (error) {
           console.error("Error calculating average service time:", error);
@@ -482,7 +433,6 @@ export default {
     },
 
     async calculateAverageWaitingTime() {
-      console.log("Service selected:", this.selectedService);
       const user = auth.currentUser;
 
       if (user) {
@@ -491,7 +441,6 @@ export default {
         const queuesCollectionRef = collection(userDocRef, "queues");
 
         try {
-          // Query completed queues based on the selected service
           let completedQueuesQuery;
 
           if (this.selectedService) {
@@ -501,72 +450,38 @@ export default {
               where("service", "==", this.selectedService)
             );
           } else {
-            // If no service is selected, query all completed queues
             completedQueuesQuery = query(
               queuesCollectionRef,
               where("status", "==", "Completed")
             );
           }
 
-          // Listen for real-time updates using onSnapshot
           const unsubscribe = onSnapshot(completedQueuesQuery, (snapshot) => {
             let totalWaitingTime = 0;
             let numberOfCompletedQueues = 0;
 
-            // Iterate through completed queues
             snapshot.forEach((queueDoc) => {
               const queueData = queueDoc.data();
 
-              // Ensure the queue has a valid numeric waiting time
               if (
                 typeof queueData.waitingTime === "number" &&
                 !isNaN(queueData.waitingTime)
               ) {
-                // Accumulate the total waiting time and increment the count
                 totalWaitingTime += queueData.waitingTime;
                 numberOfCompletedQueues++;
               }
             });
 
-            // Calculate average waiting time
             const averageWaitingTime =
               numberOfCompletedQueues > 0
                 ? totalWaitingTime / numberOfCompletedQueues
                 : 0;
 
-            console.log(
-              "Total waiting time of completed queues (numeric):",
-              totalWaitingTime
-            );
-
-            // Log the total waiting time in a formatted manner
-            const formattedTotalWaitingTime = this.formatServiceTime(
-              totalWaitingTime
-            );
-
-            console.log(
-              "Total waiting time of completed queues (formatted):",
-              formattedTotalWaitingTime
-            );
-
-            console.log("Number of Completed Queues:", numberOfCompletedQueues);
-            console.log(
-              "Average waiting time of completed queues:",
-              averageWaitingTime
-            );
-
-            // Update the formattedAverageWaitingTime property
             this.formattedAverageWaitingTime = isNaN(averageWaitingTime)
               ? "N/A"
               : this.formatServiceTime(averageWaitingTime);
-
-            console.log(
-              "Formatted Average Waiting Time:",
-              this.formattedAverageWaitingTime
-            );
           });
 
-          // Save the unsubscribe function in a component data property to be used later
           this.unsubscribeAverageWaitingTime = unsubscribe;
         } catch (error) {
           console.error("Error calculating average waiting time:", error);
@@ -595,27 +510,22 @@ export default {
         const queueDocRef = doc(userDocRef, "queues", id);
 
         try {
-          // Fetch the queue data before updating
           const queueDocSnapshot = await getDoc(queueDocRef);
           const queueData = queueDocSnapshot.data();
 
-          // Check if the queue was in a waiting state before becoming ongoing
           if (queueData.status === "Waiting") {
-            // Calculate waiting time by subtracting the queue's date from the current time
             const waitingTime = Date.now() - queueData.date;
 
-            // Update the queue status to 'Ongoing' and store the start time and waiting time
             await updateDoc(queueDocRef, {
               status: "Ongoing",
-              startTime: Date.now(), // Add a field to store the start time
-              waitingTime: waitingTime, // Add a field to store the waiting time
+              startTime: Date.now(),
+              waitingTime: waitingTime,
             });
             this.sendNotification(queueData.queueNo);
 
             this.startTimer();
             this.isOngoingQueueForService = false;
 
-            // Return the startTimestamp to use for calculating service time in completeQueue
             return Date.now();
           } else {
             console.log("Queue is not in a waiting state.");
@@ -636,20 +546,17 @@ export default {
         const queueDocRef = doc(userDocRef, "queues", id);
 
         try {
-          const completedTimestamp = Date.now(); // Store the completion time
+          const completedTimestamp = Date.now();
 
-          // Get the queue document to retrieve the start time
           const queueDocSnapshot = await getDoc(queueDocRef);
           const queueData = queueDocSnapshot.data();
 
-          // Calculate the service time in milliseconds
           const serviceTime = completedTimestamp - queueData.startTime;
 
-          // Update the queue status to 'Completed' and store the service time as a number
           await updateDoc(queueDocRef, {
             status: "Completed",
-            completedTime: completedTimestamp, // Add a field to store the completion time
-            serviceTime: serviceTime, // Store the service time as a number
+            completedTime: completedTimestamp,
+            serviceTime: serviceTime,
           });
 
           console.log(
@@ -667,11 +574,11 @@ export default {
     },
     startTimer() {
       this.timerInterval = setInterval(() => {
-        this.elapsedTime += 1000; // Increment by 1 second (1000ms)
+        this.elapsedTime += 1000;
       }, 1000);
     },
     stopTimer() {
-      clearInterval(this.timerInterval); // Clear the interval to stop the timer
+      clearInterval(this.timerInterval);
 
       this.elapsedTime = 0;
     },
@@ -708,7 +615,6 @@ export default {
     const user = auth.currentUser;
 
     if (storedData) {
-      // If there's data in localStorage, load it directly into the Vuex store
       const parsedData = JSON.parse(storedData);
       this.$store.commit("setQueues", parsedData);
     }
@@ -733,9 +639,8 @@ export default {
           };
         });
 
-        this.$store.commit("setQueues", queues); // Update Vuex store
+        this.$store.commit("setQueues", queues);
 
-        // Store data in local storage after fetching
         localStorage.setItem("queueData", JSON.stringify(queues));
       });
     } else {
@@ -746,12 +651,10 @@ export default {
     selectedService: [
       "calculateAverageServiceTime",
       (newValue) => {
-        // Update local storage when the selected service changes
         localStorage.setItem("selectedService", newValue);
       },
     ],
     filteredQueues() {
-      // Recalculate total pages when the filteredQueues data changes
       this.pagination.totalPages = Math.ceil(
         this.filteredQueues.length / this.pagination.perPage
       );
@@ -760,10 +663,9 @@ export default {
   computed: {
     isOngoingForSelectedService() {
       if (!this.selectedService) {
-        return false; // No service selected, hence no ongoing queue
+        return false;
       }
 
-      // Logic to identify if there's an ongoing queue for the selected service
       return this.queues.some(
         (queue) =>
           queue.service === this.selectedService && queue.status === "Ongoing"
@@ -816,7 +718,7 @@ export default {
     ongoingQueueNo() {
       const filteredQueues = this.selectedService
         ? this.queues.filter((queue) => queue.service === this.selectedService)
-        : this.queues; // Use all queues if no service is selected
+        : this.queues;
 
       const ongoingQueue = filteredQueues.find(
         (queue) => queue.status === "Ongoing"
@@ -825,8 +727,6 @@ export default {
     },
 
     filteredQueues() {
-      // const today = new Date().toLocaleDateString(); // Get the current date in string format
-
       let filtered = this.queues;
 
       if (this.selectedService) {
@@ -863,25 +763,23 @@ export default {
 </script>
 
 <style scoped>
-/* Add appropriate styles for the badges and text */
 .badge {
   display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
-  color: white; /* Set the text color */
-  /* Add other necessary styles */
+  color: white;
 }
 
 .text-bg-primary {
-  background-color: #007bff; /* Set your primary color */
+  background-color: #007bff;
 }
 
 .text-bg-secondary {
-  background-color: #6c757d; /* Set your secondary color */
+  background-color: #6c757d;
 }
 
 .text-bg-success {
-  background-color: #28a745; /* Set your success color */
+  background-color: #28a745;
 }
 .circular-buttons-container {
   display: flex;
@@ -890,51 +788,49 @@ export default {
 .circular-button {
   border: none;
   border-radius: 50%;
-  width: 28px; /* Set your preferred width */
-  height: 28px; /* Set your preferred height */
+  width: 28px;
+  height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  margin-right: 10px; /* Set any margin as needed */
-  transition: background-color 0.3s; /* Add a transition effect */
+  margin-right: 10px;
+  transition: background-color 0.3s;
 }
 
-/* Specific styles for different buttons */
 .tick-button {
-  background-color: #28a745; /* Green color for tick button */
+  background-color: #28a745;
   color: white;
 }
 
 .tick-button:hover {
-  background-color: #218838; /* Darker green color on hover */
+  background-color: #218838;
 }
 
 .call-button {
-  background-color: #007bff; /* Blue color for call button */
+  background-color: #007bff;
   color: white;
 }
 
 .call-button:hover {
-  background-color: #0056b3; /* Darker blue color on hover */
+  background-color: #0056b3;
 }
 
 .trash-button {
-  background-color: #dc3545; /* Red color for trash button */
+  background-color: #dc3545;
   color: white;
 }
 
 .trash-button:hover {
-  background-color: #c82333; /* Darker red color on hover */
+  background-color: #c82333;
 }
 
 .circular-button i {
-  font-size: 16px; /* Set your preferred icon size */
+  font-size: 16px;
 }
 .circular-button:disabled,
 .circular-button[disabled] {
-  /* Your disabled button styles here */
-  opacity: 0.5; /* Example: Reducing opacity */
-  cursor: not-allowed; /* Example: Change cursor */
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

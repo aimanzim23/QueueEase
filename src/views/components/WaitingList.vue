@@ -188,7 +188,7 @@ export default {
   },
   data() {
     return {
-      activeTab: "waitingList", // Default to 'Waiting List' tab
+      activeTab: "waitingList",
     };
   },
   computed: {
@@ -211,14 +211,13 @@ export default {
 </script>
 
 <style scoped>
-/* Add your custom styles here */
 .nav-pills .nav-item .nav-link.active {
-  background-color: #f1f1f1; /* Bootstrap's primary color for active tab */
-  color: #000; /* White text for better visibility on active tab */
+  background-color: #f1f1f1;
+  color: #000;
 }
 
 .nav-pills .nav-item .nav-link {
-  background-color: #fff; /* White background for inactive tabs */
-  color: #000; /* Black text for better visibility on inactive tabs */
+  background-color: #fff;
+  color: #000;
 }
 </style>

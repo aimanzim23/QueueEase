@@ -44,7 +44,6 @@
         </div>
 
         <div class="row">
-          <!-- Place both graphs side by side in a single row -->
           <div class="col-lg-6">
             <div class="card z-index-2">
               <gradient-line-chart />
@@ -158,13 +157,10 @@ export default {
 
   computed: {
     firstFourQueues() {
-      // Create a copy of formattedArchivedQueues for sorting
       const sortedQueues = [...this.formattedArchivedQueues];
 
-      // Sort queues by date in descending order
       sortedQueues.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      // Take the latest four queues
       return sortedQueues.slice(0, 4).map((queue) => ({
         ...queue,
         formattedDate: this.formatDate(queue.date),
@@ -173,13 +169,11 @@ export default {
     formattedArchivedQueues() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
 
-      // Flatten the object into an array of queues
       const allQueues = Object.values(archivedQueues).reduce(
         (acc, queue) => acc.concat(queue),
         []
       );
 
-      // Group queues by date
       const groupedQueues = allQueues.reduce((acc, queue) => {
         const timestamp = queue.date;
         if (!timestamp || isNaN(timestamp)) {
@@ -199,13 +193,12 @@ export default {
             queues: [],
             totalServiceTime: 0,
             cancelledVisits: 0,
-            totalVisits: 0, // Add totalVisits property
+            totalVisits: 0,
           };
         }
 
         acc[dateKey].queues.push(queue);
 
-        // Increment totalVisits for each queue
         acc[dateKey].totalVisits += 1;
 
         if (queue.status === "Completed") {
@@ -217,8 +210,6 @@ export default {
         return acc;
       }, {});
 
-      console.log("allQueues:", allQueues);
-      console.log("groupedQueues:", groupedQueues);
       return Object.values(groupedQueues);
     },
     totalsToday() {
@@ -262,7 +253,6 @@ export default {
                 ? totalWaitingTime / numberOfCompletedQueues
                 : 0;
 
-            // Update the formattedAverageWaitingTime property
             this.formattedAverageWaitingTime = isNaN(averageWaitingTime)
               ? "N/A"
               : this.formatServiceTime(averageWaitingTime);
@@ -296,7 +286,6 @@ export default {
             (snapshot) => {
               this.allQueues = snapshot.docs.map((doc) => doc.data());
 
-              // Calculate totals for today after fetching queues
               this.calculateTotalsToday();
             }
           );
@@ -331,7 +320,7 @@ export default {
 
     formatTime(timestamp) {
       const date = new Date(timestamp);
-      return date.toLocaleTimeString(); // Adjust the formatting as needed
+      return date.toLocaleTimeString();
     },
     formatServiceTime(serviceTime) {
       if (serviceTime === null || isNaN(serviceTime)) {
@@ -358,8 +347,6 @@ export default {
     },
 
     formatDuration(totalServiceTime) {
-      // Implement a function to format duration as needed
-      // You can convert milliseconds to a human-readable format
       const seconds = Math.floor(totalServiceTime / 1000);
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);

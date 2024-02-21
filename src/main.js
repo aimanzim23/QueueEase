@@ -19,7 +19,7 @@ import {
 } from "firebase/auth";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-// Your web app's Firebase configuration
+// Web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCyek_KYCR0FVSvcj_q1G8TA_Wjc3wWlog",
   authDomain: "queue-ease-58c8d.firebaseapp.com",
@@ -77,30 +77,25 @@ library.add(fas);
 appInstance.component("fa", FontAwesomeIcon);
 appInstance.component("qr-code", VueQRCodeComponent);
 
-// Attach a global navigation guard
 router.beforeEach(async (to, from, next) => {
   const authRequired = to.matched.some((route) => route.meta.authRequired);
   const user = auth.currentUser;
 
   if (user || !authRequired) {
-    // If user is logged in or the route doesn't require authentication
     next();
   } else {
-    // User is not logged in and route requires authentication
     await new Promise((resolve) => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
         store.commit("setUser", user);
-        unsubscribe(); // Unsubscribe after getting the user information
+        unsubscribe();
         resolve();
       });
     });
 
     const updatedUser = auth.currentUser;
     if (updatedUser) {
-      // User logged in during the waiting period
       next();
     } else {
-      // User not logged in, redirect to signin
       next("/signin");
     }
   }
@@ -117,12 +112,11 @@ if (navigator.serviceWorker) {
     });
 }
 
-// Check the initial authentication state
 const unsubscribe = auth.onAuthStateChanged((user) => {
   store.commit("setUser", user);
 
   appInstance.mount("#app");
-  unsubscribe(); // Unsubscribe after mounting the app
+  unsubscribe();
 });
 
 export { app, db, auth };

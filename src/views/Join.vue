@@ -120,7 +120,6 @@ export default {
         const userId = this.$route.params.userId;
         const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-        // Fetch the existing queues to determine the last queue number
         const latestQuery = query(
           queuesCollectionRef,
           orderBy("queueNo", "desc"),
@@ -134,15 +133,12 @@ export default {
           lastQueueNo = parseInt(snapshot.docs[0].data().queueNo, 10) || 0;
         }
 
-        // Increment the queue number for the new queue
         const newQueueNo = lastQueueNo + 1;
         const formattedQueueNo = String(newQueueNo).padStart(3, "0");
         const initialStatus = "Waiting";
 
-        // Generate a unique queue ID using uuid
         const queueId = uuidv4();
 
-        // Construct queue data object from the form
         const queueData = {
           userId: userId,
           queueId,
@@ -151,14 +147,12 @@ export default {
           status: initialStatus,
           phoneNumber: this.newQueue.phoneNumber,
           date: Date.now(),
-          queueNo: formattedQueueNo, // Add the queueNo field
+          queueNo: formattedQueueNo,
         };
 
-        // Add queue data to Firestore in the "queues" collection under the specific user
         await addDoc(queuesCollectionRef, queueData);
         console.log("Queue added to user's queues:", queueData);
 
-        // Optionally, you can redirect or perform other actions here.
         this.$router.push({
           name: "QueueTicket",
           params: {
@@ -167,25 +161,20 @@ export default {
           },
         });
 
-        // Reset the form fields after adding the queue
         this.newQueue = {
           userName: "",
           phoneNumber: "",
         };
       } catch (error) {
         console.error("Error adding queue:", error);
-        // Handle errors here
       }
     },
   },
   mounted() {
-    // Fetch services when the component is mounted
     this.fetchServices();
 
-    // Retrieve previously saved form data from Vuex on mount
     const savedFormData = this.$store.getters.getSavedUserData;
 
-    // If there's previously saved data, update the form fields
     if (savedFormData) {
       this.newQueue.userName = savedFormData.userName || "";
       this.newQueue.phoneNumber = savedFormData.phoneNumber || "";

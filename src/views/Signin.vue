@@ -122,7 +122,7 @@
 
 <script>
 import Navbar from "@/examples/PageLayout/Navbar.vue";
-// import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";

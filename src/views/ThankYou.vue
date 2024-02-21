@@ -11,17 +11,13 @@
 </template>
 
 <script>
-export default {
-  // You can add any additional logic or methods if needed
-};
+export default {};
 </script>
 
 <style scoped>
 .card {
   width: 100%;
-  max-width: 400px; /* Adjust max-width as needed */
+  max-width: 400px;
   margin: auto;
 }
-
-/* Add any additional styles if needed */
 </style>

@@ -52,7 +52,7 @@
                 <label for="service" class="form-label">Service</label>
                 <select class="form-select" v-model="newQueue.service">
                   <option disabled value="">Please select a service</option>
-                  <!-- Populate options from fetched services -->
+
                   <option
                     v-for="(service, index) in availableServices"
                     :key="index"
@@ -146,10 +146,8 @@ export default {
         const userDocRef = doc(db, "users", userId);
         const queuesCollectionRef = collection(userDocRef, "queues");
 
-        // Generate a unique queue ID using uuid
         const queueId = uuidv4();
 
-        // Fetch the existing queues to determine the last queue number
         const latestQuery = query(
           queuesCollectionRef,
           orderBy("queueNo", "desc"),
@@ -168,24 +166,22 @@ export default {
 
             const initialStatus = "Waiting";
 
-            // Add the queue with the generated queueId
             addDoc(queuesCollectionRef, {
               queueId,
               userName: this.newQueue.userName,
               phoneNumber: this.newQueue.phoneNumber,
               service: this.newQueue.service,
               date: Date.now(),
-              queueNo: formattedQueueNo, // Use the formatted queueNo
+              queueNo: formattedQueueNo,
               status: initialStatus,
             })
               .then(() => {
-                // Reset the form fields after adding the queue
                 this.newQueue = {
                   userName: "",
                   phoneNumber: "",
                   service: "",
                 };
-                this.showModal = false; // Close the modal
+                this.showModal = false;
               })
               .catch((error) => {
                 console.error(
@@ -203,14 +199,12 @@ export default {
     },
   },
   mounted() {
-    // Fetch services when the component is mounted
     this.fetchServices();
   },
 };
 </script>
 
 <style scoped>
-/* Optional styles for the modal */
 .modal-backdrop {
   position: fixed;
   top: 0;

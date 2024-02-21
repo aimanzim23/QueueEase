@@ -90,10 +90,9 @@ export default {
       newService: {
         serviceName: "",
         description: "",
-        // Add other fields for the service as needed
       },
       services: [],
-      addingService: false, // Track whether service is being added
+      addingService: false,
     };
   },
 
@@ -112,7 +111,7 @@ export default {
 
         try {
           await deleteDoc(serviceDocRef);
-          // Remove the service from the local array
+
           this.services.splice(index, 1);
           console.log("Service removed successfully!");
         } catch (error) {
@@ -125,7 +124,7 @@ export default {
     async addNewService() {
       const user = auth.currentUser;
       if (user) {
-        this.addingService = true; // Set addingService to true when adding service
+        this.addingService = true;
         const servicesCollectionRef = collection(
           db,
           "users",
@@ -133,20 +132,16 @@ export default {
           "services"
         );
 
-        // Prepare service data
         const serviceData = {
           serviceName: this.newService.serviceName,
           description: this.newService.description,
-          // Add other fields for the service as needed
         };
 
         addDoc(servicesCollectionRef, serviceData)
           .then(() => {
-            // Reset the form fields after adding the service
             this.newService = {
               serviceName: "",
               description: "",
-              // Reset other fields as needed
             };
             console.log("Service added successfully!");
           })
@@ -154,7 +149,7 @@ export default {
             console.error("Error adding service: ", error);
           })
           .finally(() => {
-            this.addingService = false; // Set addingService to false after adding service
+            this.addingService = false;
           });
       } else {
         console.error("User not authenticated.");
@@ -174,7 +169,6 @@ export default {
           const querySnapshot = await getDocs(servicesCollectionRef);
           this.services = [];
           querySnapshot.forEach((doc) => {
-            // Include the id property for each service
             this.services.push({ id: doc.id, ...doc.data() });
           });
         } catch (error) {

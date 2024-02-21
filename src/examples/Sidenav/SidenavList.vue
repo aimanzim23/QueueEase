@@ -82,30 +82,6 @@
             </template>
           </sidenav-item>
         </li>
-        <!-- <li class="nav-item">
-          <sidenav-item
-            url="/signin"
-            :class="getRoute() === 'signin' ? 'active' : ''"
-            :navText="'Sign In'"
-          >
-            <template v-slot:icon>
-              <i
-                class="ni ni-single-copy-04 text-danger text-sm opacity-10"
-              ></i>
-            </template>
-          </sidenav-item>
-        </li>
-        <li class="nav-item">
-          <sidenav-item
-            url="/signup"
-            :class="getRoute() === 'signup' ? 'active' : ''"
-            :navText="'Sign Up'"
-          >
-            <template v-slot:icon>
-              <i class="ni ni-collection text-info text-sm opacity-10"></i>
-            </template>
-          </sidenav-item>
-        </li> -->
       </ul>
     </div>
   </div>
@@ -124,45 +100,12 @@
             VISITOR
           </h6>
         </li>
-        <!-- <li class="nav-item">
-          <sidenav-item
-            url="/dashboard-default"
-            :class="getRoute() === 'dashboard-default' ? 'active' : ''"
-            :navText="'E-Ticket'"
-          >
-            <template v-slot:icon>
-              <i class="ni ni-tv-2 text-primary text-sm opacity-10"></i>
-            </template>
-          </sidenav-item>
-        </li>
-        <li class="nav-item">
-          <sidenav-item
-            url="/live-queue"
-            :class="getRoute() === 'monitor queue' ? 'active' : ''"
-            :navText="'Live Queue'"
-          >
-            <template v-slot:icon>
-              <i
-                class="ni ni-calendar-grid-58 text-warning text-sm opacity-10"
-              ></i>
-            </template>
-          </sidenav-item>
-        </li> -->
       </ul>
     </div>
   </div>
-
-  <!-- <div class="pt-3 mx-3 mt-3 sidenav-footer">
-    <sidenav-card
-      :class="cardBg"
-      textPrimary="Need Help?"
-      textSecondary="Please check our docs"
-    />
-  </div> -->
 </template>
 <script>
 import SidenavItem from "./SidenavItem.vue";
-// import SidenavCard from "./SidenavCard.vue";
 
 export default {
   name: "SidenavList",
@@ -187,10 +130,8 @@ export default {
   },
   computed: {
     showSidenav() {
-      // Get the current route
       const currentRoute = this.$route;
 
-      // Check if the route's metadata has authRequired and return its value
       return currentRoute.meta && currentRoute.meta.authRequired;
     },
   },

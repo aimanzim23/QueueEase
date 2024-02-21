@@ -11,7 +11,6 @@ app.use(cors());
 
 app.options("*", cors()); // Enable preflight for all routes
 
-// Your existing API endpoint
 app.post("/send-notification", (req, res) => {
   const { registrationToken, title, body } = req.body;
 

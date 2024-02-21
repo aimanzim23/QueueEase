@@ -216,7 +216,7 @@ export default {
       expandedIndex: null,
 
       currentPage: 1,
-      perPage: 10, // Display 10 items per page
+      perPage: 10,
       startDate: null,
       endDate: null,
     };
@@ -275,13 +275,11 @@ export default {
     formattedArchivedQueues() {
       const archivedQueues = this.$store.getters.getArchivedQueues;
 
-      // Flatten the object into an array of queues
       const allQueues = Object.values(archivedQueues).reduce(
         (acc, queue) => acc.concat(queue),
         []
       );
 
-      // Group queues by date
       const groupedQueues = allQueues.reduce((acc, queue) => {
         const timestamp = queue.date;
         if (!timestamp || isNaN(timestamp)) {
@@ -318,9 +316,6 @@ export default {
           group.totalServiceTime /
           (1000 * 60)
         ).toFixed(2);
-        console.log(
-          `Date: ${group.date}, Total Service Time (minutes): ${group.totalServiceTimeMinutes}`
-        );
       });
 
       return Object.values(groupedQueues);
@@ -328,9 +323,8 @@ export default {
   },
   methods: {
     applyDateFilter() {
-      // Reset pagination to first page
       this.currentPage = 1;
-      // Trigger re-rendering by resetting the currentPage value
+
       this.currentPage = 1;
     },
     nextPage() {
@@ -353,7 +347,7 @@ export default {
     },
     formatTime(timestamp) {
       const date = new Date(timestamp);
-      return date.toLocaleTimeString(); // Adjust the formatting as needed
+      return date.toLocaleTimeString();
     },
     formatServiceTime(serviceTime) {
       if (serviceTime === null || isNaN(serviceTime)) {
@@ -380,8 +374,6 @@ export default {
     },
 
     formatDuration(totalServiceTime) {
-      // Implement a function to format duration as needed
-      // You can convert milliseconds to a human-readable format
       const seconds = Math.floor(totalServiceTime / 1000);
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
@@ -392,21 +384,15 @@ export default {
       return queues ? queues.length : 0;
     },
     toggleCollapse(index) {
-      // Toggle collapse for the selected index
       this.expandedIndex = this.expandedIndex === index ? null : index;
     },
     isExpanded(index) {
-      // Check if the table is expanded for a specific index
       return this.expandedIndex === index;
     },
   },
   async created() {
     try {
       await this.$store.dispatch("fetchArchivedQueues");
-      console.log(
-        "Archived queues fetched",
-        this.$store.getters.getArchivedQueues
-      );
     } catch (error) {
       console.error("Error fetching archived queues:", error);
     }
@@ -417,11 +403,11 @@ export default {
 <style scoped>
 .icon-container {
   cursor: pointer;
-  font-size: 1.5rem; /* Adjust the size as needed */
-  color: grey; /* Set the default color */
+  font-size: 1.5rem;
+  color: grey;
 }
 
 .icon-container:hover {
-  color: grey; /* Set the hover color */
+  color: grey;
 }
 </style>

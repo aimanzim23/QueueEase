@@ -43,7 +43,7 @@
 
 <script>
 import { collection, getDocs, doc } from "firebase/firestore";
-import { db, auth } from "@/main"; // Assuming you have a firebase.js file exporting your db instance
+import { db, auth } from "@/main";
 
 export default {
   name: "announcement-card",
@@ -54,7 +54,6 @@ export default {
   },
   computed: {
     displayedAnnouncements() {
-      // Return the first four announcements
       return this.postedAnnouncements.slice(0, 4);
     },
   },
@@ -68,15 +67,14 @@ export default {
         const user = auth.currentUser;
 
         if (user) {
-          const userDocRef = doc(db, "users", user.uid); // Reference to the user's document
+          const userDocRef = doc(db, "users", user.uid);
           const announcementsCollectionRef = collection(
             userDocRef,
             "announcements"
-          ); // Reference to the announcements collection
+          );
 
           const querySnapshot = await getDocs(announcementsCollectionRef);
 
-          // Update the postedAnnouncements array
           this.postedAnnouncements = querySnapshot.docs.map((doc) => {
             const announcementData = doc.data();
             return {
@@ -85,7 +83,6 @@ export default {
             };
           });
         } else {
-          // Handle the case when the user is not authenticated
           console.error("User not authenticated");
         }
       } catch (error) {

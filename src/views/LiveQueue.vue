@@ -25,9 +25,7 @@ export default {
       const userId = this.$route.params.userId;
       const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-      // Use onSnapshot to listen for real-time updates
       onSnapshot(queuesCollectionRef, (querySnapshot) => {
-        // Directly assign a new array
         this.queueData = querySnapshot.docs.map((doc) => doc.data());
         console.log("Queue data:", this.queueData);
       });
@@ -38,6 +36,4 @@ export default {
 };
 </script>
 
-<style scoped>
-/* Add your styling here */
-</style>
+<style scoped></style>

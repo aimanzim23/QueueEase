@@ -354,25 +354,19 @@ export default {
         const userId = this.$route.params.userId;
         const routeQueueId = this.$route.params.queueId;
 
-        // Construct the queues collection reference
         const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-        // Query for the document that has the specified queueId
         const querySnapshot = await getDocs(
           query(queuesCollectionRef, where("queueId", "==", routeQueueId))
         );
 
         if (!querySnapshot.empty) {
-          // There should be only one document matching the queueId
           const queueDoc = querySnapshot.docs[0];
           const queueDocRef = doc(db, "users", userId, "queues", queueDoc.id);
 
-          // Update the queue status to "Cancelled"
           await updateDoc(queueDocRef, {
             status: "Cancelled",
           });
-
-          console.log("Queue cancelled successfully.");
 
           // Display an alert to the user
           window.alert("Queue cancelled successfully!");
@@ -420,18 +414,14 @@ export default {
         const userId = this.$route.params.userId;
         const queuesCollectionRef = collection(db, "users", userId, "queues");
 
-        // Use onSnapshot to listen for real-time updates
         onSnapshot(queuesCollectionRef, (querySnapshot) => {
-          // Directly assign a new array
           this.queueData = querySnapshot.docs.map((doc) => doc.data());
 
-          // Find the selected queue based on the queueId
           this.selectedQueue = this.queueData.find(
             (queue) => queue.queueId === this.selectedQueueId
           );
 
           if (this.selectedQueue && this.selectedQueue.status === "Completed") {
-            // Show an alert
             window.alert(
               "Thank you for using Queue Ease! Visit our website on www.queueease.com."
             );
@@ -439,22 +429,16 @@ export default {
             this.$router.push(`/thankyou`);
           }
 
-          // Find the current queue based on the waitingCountForService and selectedQueue
           this.currentQueue = this.queueData.find(
             (queue) =>
               queue.service === this.selectedQueue.service &&
               queue.status === "Ongoing"
           );
 
-          // If there's no ongoing queue, set currentQueue to null
           if (!this.currentQueue) {
             this.currentQueue = "No ongoing queues";
           }
 
-          // Now, 'selectedQueue' contains the details of the specific queue
-          console.log("Selected Queue:", this.selectedQueue.service);
-
-          // Set the flag to indicate that data is loaded
           this.isDataLoaded = true;
         });
       } catch (error) {
@@ -620,8 +604,7 @@ export default {
 .nav-link:hover {
   border-bottom: 2px solid #474646;
 }
-/* Add your custom styles here */
-/* Add your custom styles here */
+
 .live-queue-container {
   padding: 20px;
 }
@@ -644,7 +627,7 @@ export default {
   margin: 20px;
   padding: 16px;
   width: 100%;
-  max-width: 600px; /* Adjust the max-width as needed */
+  max-width: 600px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -668,7 +651,7 @@ export default {
   border-radius: 8px;
   margin: 10px;
   padding: 12px;
-  width: 45%; /* Adjust the width as needed */
+  width: 45%;
   box-sizing: border-box;
   text-align: center;
 }

@@ -236,10 +236,8 @@ export default {
         const userDocRef = doc(db, "users", userId);
 
         try {
-          // Set saving state to true
           this.saving = true;
 
-          // Set the user document with the new information
           await setDoc(userDocRef, {
             email: this.email,
             firstName: this.firstName,

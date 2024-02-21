@@ -200,7 +200,6 @@ export default {
       return this.queues.slice(start, end);
     },
     filteredPaginatedQueues() {
-      // Filter the paginated queues based on the selected service
       return this.paginatedQueues.filter(
         (queue) =>
           !this.selectedService || queue.service === this.selectedService
@@ -300,20 +299,17 @@ export default {
         const queueDocRef = doc(userDocRef, "queues", id);
 
         try {
-          const completedTimestamp = Date.now(); // Store the completion time
+          const completedTimestamp = Date.now();
 
-          // Get the queue document to retrieve the start time
           const queueDocSnapshot = await getDoc(queueDocRef);
           const queueData = queueDocSnapshot.data();
 
-          // Calculate the service time in milliseconds
           const serviceTime = completedTimestamp - queueData.startTime;
 
-          // Update the queue status to 'Completed' and store the service time as a number
           await updateDoc(queueDocRef, {
             status: "Completed",
-            completedTime: completedTimestamp, // Add a field to store the completion time
-            serviceTime: serviceTime, // Store the service time as a number
+            completedTime: completedTimestamp,
+            serviceTime: serviceTime,
           });
 
           console.log(
@@ -338,35 +334,27 @@ export default {
         const queueDocRef = doc(userDocRef, "queues", id);
 
         try {
-          // Fetch the queue data before updating
           const queueDocSnapshot = await getDoc(queueDocRef);
           const queueData = queueDocSnapshot.data();
 
-          // Check if the queue was in a waiting state before becoming ongoing
           if (
             queueData.status === "Waiting" ||
             queueData.status === "No Show"
           ) {
-            // Calculate waiting time by subtracting the queue's date from the current time
             const waitingTime = Date.now() - queueData.date;
 
-            // Update the queue status to 'Ongoing' and store the start time and waiting time
             await updateDoc(queueDocRef, {
               status: "Ongoing",
-              startTime: Date.now(), // Add a field to store the start time
-              waitingTime: waitingTime, // Add a field to store the waiting time
+              startTime: Date.now(),
+              waitingTime: waitingTime,
             });
 
-            // Call the sendNotification function here
             this.sendNotification(queueData.queueNo);
 
-            // Start the timer
             this.startTimer();
 
-            // Set the flag to indicate ongoing queue for the service
             this.isOngoingQueueForService = false;
 
-            // Return the startTimestamp to use for calculating service time in completeQueue
             return Date.now();
           }
         } catch (error) {

@@ -2,7 +2,7 @@ import { doc, collection, getDocs } from "firebase/firestore";
 import { db, auth } from "@/main";
 
 const state = {
-  availableServices: [], // Initial state for available services
+  availableServices: [],
 };
 
 const mutations = {
@@ -20,18 +20,16 @@ const actions = {
 
       try {
         const querySnapshot = await getDocs(servicesCollectionRef);
-        const availableServices = []; // Array to store fetched services
+        const availableServices = [];
 
         querySnapshot.forEach((doc) => {
           const serviceData = doc.data();
           availableServices.push({
             id: doc.id,
             serviceName: serviceData.serviceName,
-            // Other service properties if needed
           });
         });
 
-        // Commit the mutation to update the store state
         commit("setAvailableServices", availableServices);
       } catch (error) {
         console.error("Error fetching services:", error);

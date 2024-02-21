@@ -75,21 +75,19 @@ export default {
         acc[dateKey].queues.push(queue);
         acc[dateKey].totalVisits += 1;
         if (queue.status === "Completed") {
-          acc[dateKey].totalServiceTime += (queue.serviceTime || 0) / 60 / 1000; // Convert service time to minutes
+          acc[dateKey].totalServiceTime += (queue.serviceTime || 0) / 60 / 1000;
         } else if (queue.status === "Cancelled") {
           acc[dateKey].cancelledVisits += 1;
         }
         return acc;
       }, {});
 
-      // Sort the date keys
       const sortedDateKeys = Object.keys(groupedQueues).sort().slice(-8);
 
       this.chartData.labels = sortedDateKeys.map((dateKey) =>
         this.formatDate(new Date(groupedQueues[dateKey].date), "MM/DD")
       );
 
-      // Round the totalServiceTime values to two decimal places
       this.chartData.values = sortedDateKeys.map(
         (dateKey) => +groupedQueues[dateKey].totalServiceTime.toFixed(2)
       );

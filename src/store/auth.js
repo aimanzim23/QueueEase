@@ -12,7 +12,6 @@ const state = {
   user: null,
   authIsReady: false,
   isLoggedIn: false,
-  // other auth-related state properties
 };
 
 const mutations = {
@@ -28,7 +27,6 @@ const mutations = {
   clearUserData(state) {
     state.user = null;
   },
-  // other mutations related to auth
 };
 
 const actions = {
@@ -77,12 +75,10 @@ const actions = {
   },
   async logout({ commit }) {
     try {
-      // Perform the logout operation from Firebase
       await signOut(auth);
-      // Reset user-related data in your Vuex store
-      commit("clearUserData"); // Adjust this mutation to clear user-specific data
 
-      // Redirect the user to the signin page or any other relevant page
+      commit("clearUserData");
+
       router.push("/signin");
     } catch (error) {
       console.error("Logout failed:", error);

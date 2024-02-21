@@ -91,7 +91,6 @@ export default {
       } catch (error) {
         console.error("Error creating queue:", error);
       } finally {
-        // Set loading to false after 1 second
         setTimeout(() => {
           this.loading = false;
         }, 1000);
@@ -110,7 +109,7 @@ export default {
           });
       } catch (error) {
         console.error("Clipboard API not supported:", error);
-        // Fallback for browsers that do not support the Clipboard API
+
         const tempInput = document.createElement("textarea");
         tempInput.value = this.qrCodeData;
         document.body.appendChild(tempInput);
@@ -122,7 +121,7 @@ export default {
     },
 
     printLink() {
-      // Implement print link logic if needed
+      // Implement print link logic
     },
   },
 };
