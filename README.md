@@ -16,6 +16,12 @@ npm install
 npm run serve
 ```
 
+### Firebase Configuration
+
+```
+To run localhost, setup firebase: replace the firebase config key in main.js file
+```
+
 ### Compiles and minifies for production
 
 ```
